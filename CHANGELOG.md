@@ -2,6 +2,18 @@
 
 Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionierung nach [SemVer](https://semver.org/lang/de/).
 
+## [1.2.0] – 2026-10-31
+
+### Hinzugefügt
+- **Übersicht der Vorgänge** auf der Migrationsseite: alle Exporte und Importe mit Status (läuft, pausiert, abgeschlossen, fehlgeschlagen), Etappe, Fortschritt, Zahlen (z. B. heruntergeladene, vorhandene und fehlgeschlagene Mediendateien, angelegte Beiträge) und vollständigem Protokoll.
+- **Fortsetzen** pausierter Vorgänge, auch nach dem Neuladen der Seite oder in einem anderen Browser. Herunterladen und Löschen ebenfalls in der Übersicht.
+- Live-Zahlen im Fortschrittsbereich während des Imports.
+- WP-CLI: `wp puppypress-migrator status` und `wp puppypress-migrator resume <id>`.
+
+### Behoben
+- Ein Vorgang konnte gleichzeitig in zwei Browserfenstern laufen. Jetzt arbeitet immer nur eine Anfrage daran, die andere wartet.
+- Die tägliche Bereinigung löschte Vorgänge drei Tage nach dem Start, auch wenn sie noch liefen. Jetzt zählt die letzte Aktivität.
+
 ## [1.1.1] – 2026-10-31
 
 ### Behoben

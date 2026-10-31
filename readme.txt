@@ -4,7 +4,7 @@ Tags: migration, import, export, dogs, breeding
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,12 @@ Works in resumable steps (no timeouts), never duplicates records when run twice,
 4. New site: Tools → PuppyPress Migration → upload the ZIP → Start import.
 
 == Changelog ==
+
+= 1.2.0 =
+* Jobs overview with status, progress, counters, log, Continue, Download and Delete.
+* Paused jobs can be continued after reloading the page; a job never runs twice at the same time.
+* WP-CLI: status and resume commands.
+* Cleanup removes jobs three days after their last activity instead of their creation.
 
 = 1.1.1 =
 * Running the import again adds term assignments that were skipped because a taxonomy (e.g. et_post_format of Extra/Divi) was not registered.

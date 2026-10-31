@@ -108,3 +108,62 @@
 .ppm-transfer legend {
 	font-weight: 600;
 }
+
+.ppm-summary {
+	margin: 0.5em 0;
+	color: #50575e;
+}
+
+.ppm-summary li {
+	margin: 0 0 0.2em;
+}
+
+.ppm-jobs {
+	margin-top: 20px;
+}
+
+.ppm-jobs td {
+	vertical-align: top;
+}
+
+.ppm-bar--small {
+	height: 6px;
+	margin-bottom: 4px;
+}
+
+.ppm-actions .button {
+	margin: 0 6px 6px 0;
+}
+
+.ppm-status {
+	display: inline-block;
+	padding: 2px 8px;
+	font-size: 12px;
+	border-radius: 10px;
+	background: #f0f0f1;
+}
+
+.ppm-status--running {
+	color: #fff;
+	background: #2271b1;
+}
+
+.ppm-status--paused {
+	color: #3c2900;
+	background: #f0c33c;
+}
+
+.ppm-status--done {
+	color: #fff;
+	background: #00a32a;
+}
+
+.ppm-status--error {
+	color: #fff;
+	background: #d63638;
+}
+
+.ppm-job-log summary {
+	margin-top: 0.5em;
+	cursor: pointer;
+}

@@ -171,6 +171,71 @@ final class Command {
 	}
 
 	/**
+	 * Lists export and import jobs with their progress.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp puppypress-migrator status
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Options.
+	 */
+	public function status( $args, $assoc_args ) {
+		$rows = array();
+
+		foreach ( Job::all() as $job ) {
+			$progress = Runner::progress( $job );
+			$rows[]   = array(
+				'id'       => $job->id,
+				'type'     => $job->state['type'],
+				'status'   => $job->status(),
+				'started'  => wp_date( 'Y-m-d H:i', (int) $job->state['created'] ),
+				'progress' => $job->state['done'] ? ( empty( $job->state['error'] ) ? '100%' : $job->state['error'] ) : $progress['percent'] . '% ' . $progress['stage'],
+				'details'  => implode( ' | ', Runner::summary( $job ) ),
+			);
+		}
+
+		if ( ! $rows ) {
+			WP_CLI::log( 'No jobs.' );
+			return;
+		}
+
+		\WP_CLI\Utils\format_items( 'table', $rows, array( 'id', 'type', 'status', 'started', 'progress', 'details' ) );
+	}
+
+	/**
+	 * Continues a paused export or import job.
+	 *
+	 * ## OPTIONS
+	 *
+	 * <id>
+	 * : Job ID (see `wp puppypress-migrator status`).
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Options.
+	 */
+	public function resume( $args, $assoc_args ) {
+		$job = Job::load( $args[0] );
+
+		if ( ! $job ) {
+			WP_CLI::error( 'Job not found.' );
+		}
+
+		if ( $job->state['done'] ) {
+			WP_CLI::success( 'This job is already finished.' );
+			return;
+		}
+
+		$this->run( $job );
+
+		if ( 'export' === $job->state['type'] ) {
+			WP_CLI::success( 'Export finished: ' . $job->path( Exporter::ZIP_NAME ) );
+		} else {
+			WP_CLI::success( 'Import finished.' );
+		}
+	}
+
+	/**
 	 * Runs a job to completion and prints its log.
 	 *
 	 * @param Job $job Job.
@@ -181,6 +246,12 @@ final class Command {
 
 		while ( ! $job->state['done'] ) {
 			Runner::run( $job, 30.0 );
+
+			if ( $job->busy ) {
+				WP_CLI::log( 'The job is running in another process; waiting …' );
+				sleep( 5 );
+				continue;
+			}
 
 			$progress = Runner::progress( $job );
 			if ( $progress['stage'] && $progress['stage'] !== $stage ) {

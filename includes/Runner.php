@@ -26,6 +26,17 @@ final class Runner {
 			return $job;
 		}
 
+		// Only one request may work on a job at a time (e.g. two open browser tabs).
+		$lock = fopen( $job->path( 'lock' ), 'c' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+
+		if ( ! $lock || ! flock( $lock, LOCK_EX | LOCK_NB ) ) {
+			$job->busy = true;
+			return $job;
+		}
+
+		$job->busy = false;
+		$job->state = Job::load( $job->id )->state; // Pick up progress made by the previous lock holder.
+
 		$worker = 'export' === $job->state['type'] ? new Exporter() : new Importer();
 		$stages = $worker->stages();
 		$start  = microtime( true );
@@ -66,6 +77,9 @@ final class Runner {
 			$job->save();
 		}
 
+		flock( $lock, LOCK_UN );
+		fclose( $lock ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+
 		return $job;
 	}
 
@@ -93,6 +107,62 @@ final class Runner {
 			'percent' => (int) floor( 100 * $index / $count ),
 			'stage'   => self::stage_label( $stages[ $index ] ),
 		);
+	}
+
+	/**
+	 * Human readable counters of a job ("12 of 40 files: 10 downloaded …").
+	 *
+	 * @param Job $job Job.
+	 * @return string[]
+	 */
+	public static function summary( Job $job ) {
+		$s     = $job->state['stats'];
+		$n     = static function ( $key ) use ( $s ) {
+			return isset( $s[ $key ] ) ? (int) $s[ $key ] : 0;
+		};
+		$lines = array();
+
+		if ( 'export' === $job->state['type'] ) {
+			if ( $n( 'files_total' ) ) {
+				/* translators: 1: files packed, 2: total files */
+				$lines[] = sprintf( __( 'Files packed: %1$s of %2$s', 'puppypress-migrator' ), number_format_i18n( $n( 'files_done' ) ), number_format_i18n( $n( 'files_total' ) ) );
+			}
+			if ( $n( 'size' ) ) {
+				/* translators: %s: file size */
+				$lines[] = sprintf( __( 'Package size: %s', 'puppypress-migrator' ), size_format( $n( 'size' ), 1 ) );
+			}
+			return $lines;
+		}
+
+		if ( $n( 'files_total' ) ) {
+			$lines[] = sprintf(
+				/* translators: 1: files done, 2: total, 3: downloaded, 4: extracted, 5: already present, 6: failed */
+				__( 'Media files: %1$s of %2$s checked (%3$s downloaded, %4$s extracted, %5$s already present, %6$s failed)', 'puppypress-migrator' ),
+				number_format_i18n( $n( 'files_done' ) ),
+				number_format_i18n( $n( 'files_total' ) ),
+				number_format_i18n( $n( 'files_downloaded' ) ),
+				number_format_i18n( $n( 'files_extracted' ) ),
+				number_format_i18n( $n( 'files_existing' ) ),
+				number_format_i18n( $n( 'files_failed' ) )
+			);
+		}
+
+		if ( $n( 'terms_created' ) || $n( 'terms_reused' ) ) {
+			/* translators: 1: created, 2: reused */
+			$lines[] = sprintf( __( 'Terms: %1$s created, %2$s reused', 'puppypress-migrator' ), number_format_i18n( $n( 'terms_created' ) ), number_format_i18n( $n( 'terms_reused' ) ) );
+		}
+
+		if ( $n( 'posts_created' ) ) {
+			/* translators: %s: number of posts */
+			$lines[] = sprintf( __( 'Posts and media library entries created: %s', 'puppypress-migrator' ), number_format_i18n( $n( 'posts_created' ) ) );
+		}
+
+		if ( $n( 'comments_created' ) ) {
+			/* translators: %s: number of comments */
+			$lines[] = sprintf( __( 'Comments: %s', 'puppypress-migrator' ), number_format_i18n( $n( 'comments_created' ) ) );
+		}
+
+		return $lines;
 	}
 
 	/**

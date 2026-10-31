@@ -85,6 +85,8 @@ final class Page {
 					'noFile'    => __( 'Please choose a ZIP file.', 'puppypress-migrator' ),
 					'confirm'   => __( 'Start the import into this site now? Please make sure you have a backup.', 'puppypress-migrator' ),
 					'leaving'   => __( 'A migration is running. Leaving the page pauses it.', 'puppypress-migrator' ),
+					'busy'      => __( 'This job is currently running in another browser window. Waiting …', 'puppypress-migrator' ),
+					'reload'    => __( 'Refresh overview', 'puppypress-migrator' ),
 				),
 			)
 		);
@@ -95,7 +97,7 @@ final class Page {
 	 */
 	public function render() {
 		$incoming = Storage::incoming_files();
-		$exports  = $this->export_jobs();
+		$jobs     = Job::all();
 		?>
 		<div class="wrap ppm">
 			<h1><?php esc_html_e( 'PuppyPress Migration', 'puppypress-migrator' ); ?></h1>
@@ -139,19 +141,6 @@ final class Page {
 						<p><button type="submit" class="button button-primary"><?php esc_html_e( 'Create export', 'puppypress-migrator' ); ?></button></p>
 					</form>
 
-					<?php if ( $exports ) : ?>
-						<h3><?php esc_html_e( 'Existing exports', 'puppypress-migrator' ); ?></h3>
-						<ul class="ppm-exports">
-							<?php foreach ( $exports as $job ) : ?>
-								<li>
-									<a href="<?php echo esc_url( $this->action_url( 'ppm_download', $job->id ) ); ?>"><?php echo esc_html( Exporter::download_name( $job ) ); ?></a>
-									<span class="description">(<?php echo esc_html( size_format( isset( $job->state['stats']['size'] ) ? $job->state['stats']['size'] : 0, 1 ) ); ?>, <?php echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $job->state['created'] ) ); ?>)</span>
-									<a class="ppm-delete" href="<?php echo esc_url( $this->action_url( 'ppm_delete', $job->id ) ); ?>"><?php esc_html_e( 'Delete', 'puppypress-migrator' ); ?></a>
-								</li>
-							<?php endforeach; ?>
-						</ul>
-						<p class="description"><?php esc_html_e( 'Exports contain personal data (addresses, phone numbers, emails). They are deleted automatically after three days.', 'puppypress-migrator' ); ?></p>
-					<?php endif; ?>
 				</section>
 
 				<section class="ppm-card" aria-labelledby="ppm-import-title">
@@ -227,10 +216,112 @@ final class Page {
 				<h2 data-ppm-title></h2>
 				<div class="ppm-bar"><span data-ppm-bar></span></div>
 				<p class="ppm-stage" data-ppm-stage></p>
+				<ul class="ppm-summary" data-ppm-summary></ul>
 				<p data-ppm-result></p>
 				<ol class="ppm-log" data-ppm-log></ol>
 			</section>
+
+			<?php if ( $jobs ) : ?>
+				<section class="ppm-card ppm-jobs" aria-labelledby="ppm-jobs-title">
+					<h2 id="ppm-jobs-title"><?php esc_html_e( 'Jobs', 'puppypress-migrator' ); ?></h2>
+					<p class="description"><?php esc_html_e( 'A job only runs while this page is open. Paused jobs continue where they stopped. Exports contain personal data (addresses, phone numbers, emails); all job files are deleted automatically three days after their last activity.', 'puppypress-migrator' ); ?></p>
+					<table class="widefat striped">
+						<thead>
+							<tr>
+								<th scope="col"><?php esc_html_e( 'Job', 'puppypress-migrator' ); ?></th>
+								<th scope="col"><?php esc_html_e( 'Status', 'puppypress-migrator' ); ?></th>
+								<th scope="col"><?php esc_html_e( 'Progress', 'puppypress-migrator' ); ?></th>
+								<th scope="col"><?php esc_html_e( 'Actions', 'puppypress-migrator' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $jobs as $job ) : ?>
+								<?php $this->render_job_row( $job ); ?>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				</section>
+			<?php endif; ?>
 		</div>
+		<?php
+	}
+
+	/**
+	 * One row of the jobs table.
+	 *
+	 * @param Job $job Job.
+	 */
+	private function render_job_row( Job $job ) {
+		$status   = $job->status();
+		$progress = Runner::progress( $job );
+		$labels   = array(
+			'running' => __( 'running', 'puppypress-migrator' ),
+			'paused'  => __( 'paused', 'puppypress-migrator' ),
+			'done'    => __( 'finished', 'puppypress-migrator' ),
+			'error'   => __( 'failed', 'puppypress-migrator' ),
+		);
+		$type     = 'export' === $job->state['type'] ? __( 'Export', 'puppypress-migrator' ) : __( 'Import', 'puppypress-migrator' );
+		$format   = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$resumable = ! $job->state['done'] && ( 'export' === $job->state['type'] || is_readable( $job->path( Importer::ZIP_NAME ) ) );
+		?>
+		<tr>
+			<td>
+				<strong><?php echo esc_html( $type ); ?></strong><br>
+				<span class="description">
+					<?php
+					/* translators: %s: date and time */
+					echo esc_html( sprintf( __( 'started %s', 'puppypress-migrator' ), wp_date( $format, (int) $job->state['created'] ) ) );
+					if ( ! empty( $job->state['updated'] ) ) {
+						echo '<br>';
+						/* translators: %s: date and time */
+						echo esc_html( sprintf( __( 'last activity %s', 'puppypress-migrator' ), wp_date( $format, (int) $job->state['updated'] ) ) );
+					}
+					?>
+				</span>
+			</td>
+			<td><span class="ppm-status ppm-status--<?php echo esc_attr( $status ); ?>"><?php echo esc_html( $labels[ $status ] ); ?></span></td>
+			<td>
+				<?php if ( ! $job->state['done'] ) : ?>
+					<div class="ppm-bar ppm-bar--small"><span style="width: <?php echo (int) $progress['percent']; ?>%"></span></div>
+					<?php echo esc_html( $progress['stage'] ); ?>
+				<?php elseif ( ! empty( $job->state['error'] ) ) : ?>
+					<?php echo esc_html( $job->state['error'] ); ?>
+				<?php endif; ?>
+				<?php $summary = Runner::summary( $job ); ?>
+				<?php if ( $summary ) : ?>
+					<ul class="ppm-summary">
+						<?php foreach ( $summary as $line ) : ?>
+							<li><?php echo esc_html( $line ); ?></li>
+						<?php endforeach; ?>
+					</ul>
+				<?php endif; ?>
+				<?php if ( $job->state['log'] ) : ?>
+					<details class="ppm-job-log">
+						<summary>
+							<?php
+							/* translators: %d: number of log lines */
+							echo esc_html( sprintf( _n( 'Log (%d line)', 'Log (%d lines)', count( $job->state['log'] ), 'puppypress-migrator' ), count( $job->state['log'] ) ) );
+							?>
+						</summary>
+						<ol class="ppm-log">
+							<?php foreach ( array_slice( $job->state['log'], -300 ) as $entry ) : ?>
+								<li class="ppm-log__<?php echo esc_attr( $entry['level'] ); ?>"><?php echo esc_html( $entry['message'] ); ?></li>
+							<?php endforeach; ?>
+						</ol>
+					</details>
+				<?php endif; ?>
+			</td>
+			<td class="ppm-actions">
+				<?php if ( $resumable ) : ?>
+					<button type="button" class="button button-primary" data-ppm-resume="<?php echo esc_attr( $job->id ); ?>" data-ppm-title="<?php echo esc_attr( $type ); ?>"><?php esc_html_e( 'Continue', 'puppypress-migrator' ); ?></button>
+				<?php endif; ?>
+				<?php if ( 'export' === $job->state['type'] && 'done' === $status && is_readable( $job->path( Exporter::ZIP_NAME ) ) ) : ?>
+					<a class="button button-primary" href="<?php echo esc_url( $this->action_url( 'ppm_download', $job->id ) ); ?>"><?php esc_html_e( 'Download', 'puppypress-migrator' ); ?></a>
+					<span class="description"><?php echo esc_html( size_format( isset( $job->state['stats']['size'] ) ? $job->state['stats']['size'] : 0, 1 ) ); ?></span>
+				<?php endif; ?>
+				<a class="ppm-delete" href="<?php echo esc_url( $this->action_url( 'ppm_delete', $job->id ) ); ?>" data-ppm-confirm="<?php esc_attr_e( 'Delete this job and its files? Imported content is not affected.', 'puppypress-migrator' ); ?>"><?php esc_html_e( 'Delete', 'puppypress-migrator' ); ?></a>
+			</td>
+		</tr>
 		<?php
 	}
 
@@ -422,34 +513,10 @@ final class Page {
 				$job->log_since( $log_since )
 			),
 			'logTotal' => count( $job->state['log'] ),
+			'summary'  => Runner::summary( $job ),
+			'busy'     => (bool) $job->busy,
 			'download' => 'export' === $job->state['type'] && $job->state['done'] && empty( $job->state['error'] ) ? $this->action_url( 'ppm_download', $job->id ) : '',
 		);
-	}
-
-	/**
-	 * Finished export jobs, newest first.
-	 *
-	 * @return Job[]
-	 */
-	private function export_jobs() {
-		$jobs = array();
-
-		foreach ( (array) glob( Storage::base_dir() . '/jobs/*/state.json' ) as $file ) {
-			$job = $file ? Job::load( basename( dirname( $file ) ) ) : null;
-
-			if ( $job && 'export' === $job->state['type'] && $job->state['done'] && empty( $job->state['error'] ) && is_readable( $job->path( Exporter::ZIP_NAME ) ) ) {
-				$jobs[] = $job;
-			}
-		}
-
-		usort(
-			$jobs,
-			static function ( $a, $b ) {
-				return $b->state['created'] - $a->state['created'];
-			}
-		);
-
-		return $jobs;
 	}
 
 	/**

@@ -15,6 +15,7 @@ use PuppyPressMigrator\Remapper;
 use PuppyPressMigrator\Runner;
 use PuppyPressMigrator\Exporter;
 use PuppyPressMigrator\Importer;
+use PuppyPressMigrator\Storage;
 
 $failures = 0;
 $checks   = 0;
@@ -500,6 +501,51 @@ remove_all_filters( 'ppm_download_batch' );
 check( 'second run downloads only the missing file', array( 'https://media.example/uploads/2021/05/dog%2003.jpg' ) === $requested );
 
 check( 'downloader url helper', 'https://a.example/up/2021/05/%C3%BCber%20uns.jpg' === PuppyPressMigrator\Downloader::url( 'https://a.example/up/', '2021/05/über uns.jpg' ) );
+
+/*
+ * 5. Job overview: status, summary, locking.
+ */
+$summary = implode( ' | ', Runner::summary( $import ) );
+check( 'summary lists media counts', false !== strpos( $summary, 'Media files: 40 of 40 checked (38 downloaded, 0 extracted, 1 already present, 1 failed)' ) );
+check( 'finished job status', 'done' === $import->status() );
+check( 'failed job status', 'error' === $broken->status() );
+
+$paused = Job::create( 'import', Importer::default_options() );
+copy( $package, $paused->path( Importer::ZIP_NAME ) );
+check( 'fresh job counts as running', 'running' === $paused->status() );
+$paused->state['updated'] = time() - 600;
+check( 'idle job counts as paused', 'paused' === $paused->status() );
+$paused->save();
+
+// Another request holds the lock: no work is done, the caller is told to wait.
+$lock = fopen( $paused->path( 'lock' ), 'c' );
+flock( $lock, LOCK_EX );
+$other = Job::load( $paused->id );
+Runner::run( $other, 0 );
+check( 'locked job reports busy', true === $other->busy );
+check( 'locked job makes no progress', 0 === (int) Job::load( $paused->id )->state['stage'] );
+flock( $lock, LOCK_UN );
+fclose( $lock );
+
+add_filter( 'ppm_download_batch', function ( $result, $items ) {
+	return array_fill_keys( array_keys( $items ), true );
+} );
+Runner::run( $other, 0 );
+remove_all_filters( 'ppm_download_batch' );
+check( 'job runs after lock release', false === $other->busy && $other->state['done'] && empty( $other->state['error'] ) );
+
+// Cleanup removes jobs by last activity, not by creation of the folder.
+$old_job = Job::create( 'import', Importer::default_options() );
+$recent  = Job::create( 'import', Importer::default_options() );
+touch( Storage::job_dir( $old_job->id ), time() - 10 * DAY_IN_SECONDS );
+touch( Storage::job_dir( $recent->id ), time() - 10 * DAY_IN_SECONDS );
+touch( $old_job->path( 'state.json' ), time() - 10 * DAY_IN_SECONDS );
+Storage::cleanup();
+check( 'cleanup removes inactive jobs', null === Job::load( $old_job->id ) );
+check( 'cleanup keeps recently active jobs in old folders', null !== Job::load( $recent->id ) );
+
+$all = Job::all();
+check( 'job list newest first', count( $all ) >= 2 && $all[0]->state['created'] >= $all[ count( $all ) - 1 ]->state['created'] );
 
 fwrite( STDOUT, sprintf( "%d checks, %d failures\n", $checks, $failures ) );
 exit( $failures ? 1 : 0 );

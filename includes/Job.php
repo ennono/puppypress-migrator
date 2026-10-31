@@ -38,6 +38,13 @@ final class Job {
 	public $deadline = INF;
 
 	/**
+	 * Set by the runner when another request currently works on this job.
+	 *
+	 * @var bool
+	 */
+	public $busy = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $id    Job ID.
@@ -96,9 +103,55 @@ final class Job {
 	}
 
 	/**
+	 * All jobs, newest first.
+	 *
+	 * @return self[]
+	 */
+	public static function all() {
+		$jobs = array();
+
+		foreach ( (array) glob( Storage::base_dir() . '/jobs/*/state.json' ) as $file ) {
+			$job = $file ? self::load( basename( dirname( $file ) ) ) : null;
+
+			if ( $job ) {
+				$jobs[] = $job;
+			}
+		}
+
+		usort(
+			$jobs,
+			static function ( $a, $b ) {
+				return $b->state['created'] - $a->state['created'];
+			}
+		);
+
+		return $jobs;
+	}
+
+	/**
+	 * Status for display: running, paused, done or error.
+	 *
+	 * A job is "running" while some request worked on it within the last minute.
+	 *
+	 * @return string
+	 */
+	public function status() {
+		if ( ! empty( $this->state['error'] ) ) {
+			return 'error';
+		}
+
+		if ( $this->state['done'] ) {
+			return 'done';
+		}
+
+		return ( isset( $this->state['updated'] ) && $this->state['updated'] > time() - MINUTE_IN_SECONDS ) ? 'running' : 'paused';
+	}
+
+	/**
 	 * Persists the state.
 	 */
 	public function save() {
+		$this->state['updated'] = time();
 		file_put_contents( $this->path( 'state.json' ), wp_json_encode( $this->state ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 	}
 

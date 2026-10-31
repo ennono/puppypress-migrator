@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PuppyPress Migrator 1.1.1\n"
+"Project-Id-Version: PuppyPress Migrator 1.2.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-10-31 18:10+0000\n"
+"PO-Revision-Date: 2026-10-31 18:18+0000\n"
 "Last-Translator: Timo Fricke\n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
@@ -12,7 +12,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Domain: puppypress-migrator\n"
 
-#: includes/Admin/Page.php:52 includes/Admin/Page.php:53 includes/Admin/Page.php:101
+#: includes/Admin/Page.php:52 includes/Admin/Page.php:53 includes/Admin/Page.php:103
 msgid "PuppyPress Migration"
 msgstr "PuppyPress-Migration"
 
@@ -40,7 +40,7 @@ msgstr "Die Anfrage ist fehlgeschlagen. Beim erneuten Versuch macht der Vorgang 
 msgid "Retry"
 msgstr "Erneut versuchen"
 
-#: includes/Admin/Page.php:85 includes/Admin/Page.php:378
+#: includes/Admin/Page.php:85 includes/Admin/Page.php:469
 msgid "Please choose a ZIP file."
 msgstr "Bitte wählen Sie eine ZIP-Datei."
 
@@ -52,190 +52,267 @@ msgstr "Import in diese Website jetzt starten? Bitte stellen Sie sicher, dass ei
 msgid "A migration is running. Leaving the page pauses it."
 msgstr "Eine Migration läuft. Wenn Sie die Seite verlassen, wird sie pausiert."
 
-#: includes/Admin/Page.php:102
+#: includes/Admin/Page.php:88
+msgid "This job is currently running in another browser window. Waiting …"
+msgstr "Dieser Vorgang läuft gerade in einem anderen Browserfenster. Warte …"
+
+#: includes/Admin/Page.php:89
+msgid "Refresh overview"
+msgstr "Übersicht aktualisieren"
+
+#: includes/Admin/Page.php:104
 msgid "Moves all club data from a site with the former \"Extra Child\" theme to a site with PuppyPress: stud dogs with pedigrees, litters, dogs to place, approvals, breeding licenses, results, kennels, breeders, owners, media, menus, widgets and more. All references between records are rewritten to the new IDs."
 msgstr "Überträgt alle Vereinsdaten von einer Website mit dem bisherigen Theme „Extra Child“ auf eine Website mit PuppyPress: Deckrüden mit Abstammung, Würfe, Vermittlungshunde, Körberichte, Zuchtzulassungen, Ergebnisse, Zwinger, Züchter, Besitzer, Medien, Menüs, Widgets und mehr. Alle Verweise zwischen den Einträgen werden auf die neuen IDs umgeschrieben."
 
-#: includes/Admin/Page.php:105
+#: includes/Admin/Page.php:107
 msgid "The PHP extension \"zip\" (ZipArchive) is missing. Please ask your host to enable it."
 msgstr "Die PHP-Erweiterung „zip“ (ZipArchive) fehlt. Bitte bitten Sie Ihren Hoster, sie zu aktivieren."
 
-#: includes/Admin/Page.php:110
+#: includes/Admin/Page.php:112
 msgid "Export (old site)"
 msgstr "Export (alte Website)"
 
-#: includes/Admin/Page.php:113
+#: includes/Admin/Page.php:115
 msgid "What to export"
 msgstr "Was exportiert wird"
 
-#: includes/Admin/Page.php:114
+#: includes/Admin/Page.php:116
 msgid "Club data (always included)"
 msgstr "Vereinsdaten (immer enthalten)"
 
-#: includes/Admin/Page.php:115
+#: includes/Admin/Page.php:117
 msgid "Posts and pages"
 msgstr "Beiträge und Seiten"
 
-#: includes/Admin/Page.php:116
+#: includes/Admin/Page.php:118
 msgid "Menus"
 msgstr "Menüs"
 
-#: includes/Admin/Page.php:117
+#: includes/Admin/Page.php:119
 msgid "Comments"
 msgstr "Kommentare"
 
-#: includes/Admin/Page.php:118
+#: includes/Admin/Page.php:120
 msgid "Widgets"
 msgstr "Widgets"
 
-#: includes/Admin/Page.php:120
+#: includes/Admin/Page.php:122
 msgid "Media files"
 msgstr "Mediendateien"
 
-#: includes/Admin/Page.php:122
+#: includes/Admin/Page.php:124
 msgid "Entire media library"
 msgstr "Gesamte Mediathek"
 
-#: includes/Admin/Page.php:123
+#: includes/Admin/Page.php:125
 msgid "Only media used by the exported content"
 msgstr "Nur Medien, die in den exportierten Inhalten verwendet werden"
 
-#: includes/Admin/Page.php:124
+#: includes/Admin/Page.php:126
 msgid "No media files"
 msgstr "Keine Mediendateien"
 
-#: includes/Admin/Page.php:128
+#: includes/Admin/Page.php:130
 msgid "How media files are transferred"
 msgstr "Wie Mediendateien übertragen werden"
 
-#: includes/Admin/Page.php:130
+#: includes/Admin/Page.php:132
 msgid "Download during import (recommended)"
 msgstr "Beim Import herunterladen (empfohlen)"
 
-#: includes/Admin/Page.php:131
+#: includes/Admin/Page.php:133
 msgid "The package stays small. The new site downloads the files from this site, which must stay online until the import is finished. Alternatively copy the uploads folder via FTP/rsync beforehand; files that are already there are only checked."
 msgstr "Das Paket bleibt klein. Die neue Website lädt die Dateien von dieser Website herunter, die deshalb bis zum Ende des Imports erreichbar bleiben muss. Alternativ den Ordner uploads vorher per FTP/rsync kopieren; vorhandene Dateien werden dann nur geprüft."
 
-#: includes/Admin/Page.php:134
+#: includes/Admin/Page.php:136
 msgid "Pack into the ZIP file"
 msgstr "In die ZIP-Datei packen"
 
-#: includes/Admin/Page.php:135
+#: includes/Admin/Page.php:137
 msgid "Self-contained package. Only suitable for small media libraries (a few thousand files)."
 msgstr "Eigenständiges Paket. Nur für kleine Mediatheken geeignet (wenige tausend Dateien)."
 
-#: includes/Admin/Page.php:139
+#: includes/Admin/Page.php:141
 msgid "Create export"
 msgstr "Export erstellen"
 
-#: includes/Admin/Page.php:143
-msgid "Existing exports"
-msgstr "Vorhandene Exporte"
-
-#: includes/Admin/Page.php:149
-msgid "Delete"
-msgstr "Löschen"
-
-#: includes/Admin/Page.php:153
-msgid "Exports contain personal data (addresses, phone numbers, emails). They are deleted automatically after three days."
-msgstr "Exporte enthalten personenbezogene Daten (Adressen, Telefonnummern, E-Mails). Sie werden nach drei Tagen automatisch gelöscht."
-
-#: includes/Admin/Page.php:158
+#: includes/Admin/Page.php:147
 msgid "Import (new site with PuppyPress)"
 msgstr "Import (neue Website mit PuppyPress)"
 
-#: includes/Admin/Page.php:161
+#: includes/Admin/Page.php:150
 msgid "PuppyPress is not active on this site. Activate it before importing, otherwise club taxonomies cannot be assigned."
 msgstr "PuppyPress ist auf dieser Website nicht aktiv. Bitte aktivieren Sie es vor dem Import, sonst können die Vereins-Taxonomien nicht zugeordnet werden."
 
-#: includes/Admin/Page.php:166
+#: includes/Admin/Page.php:155
 msgid "Migration package (ZIP)"
 msgstr "Migrationspaket (ZIP)"
 
 #. translators: %s: maximum upload size
-#: includes/Admin/Page.php:171
+#: includes/Admin/Page.php:160
 msgid "Maximum upload size: %s."
 msgstr "Maximale Upload-Größe: %s."
 
-#: includes/Admin/Page.php:178
+#: includes/Admin/Page.php:167
 msgid "Or use a file from the incoming folder"
 msgstr "Oder eine Datei aus dem Eingangsordner verwenden"
 
-#: includes/Admin/Page.php:180
+#: includes/Admin/Page.php:169
 msgid "— Upload above —"
 msgstr "— Upload oben verwenden —"
 
 #. translators: %s: folder path
-#: includes/Admin/Page.php:191
+#: includes/Admin/Page.php:180
 msgid "Large packages: upload them via FTP/SFTP to %s and reload this page."
 msgstr "Große Pakete: per FTP/SFTP nach %s hochladen und diese Seite neu laden."
 
-#: includes/Admin/Page.php:196
+#: includes/Admin/Page.php:185
 msgid "Import options"
 msgstr "Import-Optionen"
 
-#: includes/Admin/Page.php:198
+#: includes/Admin/Page.php:187
 msgid "Download media from (optional)"
 msgstr "Medien herunterladen von (optional)"
 
-#: includes/Admin/Page.php:200
+#: includes/Admin/Page.php:189
 msgid "Only needed if the old site moved since the export. Empty: the address stored in the package."
 msgstr "Nur nötig, wenn die alte Website seit dem Export umgezogen ist. Leer: die im Paket gespeicherte Adresse."
 
-#: includes/Admin/Page.php:202
+#: includes/Admin/Page.php:191
 msgid "Replace links to the old domain with this site"
 msgstr "Links auf die alte Domain durch diese Website ersetzen"
 
-#: includes/Admin/Page.php:203
+#: includes/Admin/Page.php:192
 msgid "Import widgets"
 msgstr "Widgets importieren"
 
-#: includes/Admin/Page.php:204
+#: includes/Admin/Page.php:193
 msgid "Apply front page, sticky posts and menu locations"
 msgstr "Startseite, oben gehaltene Beiträge und Menüpositionen übernehmen"
 
-#: includes/Admin/Page.php:205
+#: includes/Admin/Page.php:194
 msgid "Create missing authors (with random passwords)"
 msgstr "Fehlende Autoren anlegen (mit zufälligen Passwörtern)"
 
-#: includes/Admin/Page.php:207
+#: includes/Admin/Page.php:196
 msgid "Otherwise assign their content to"
 msgstr "Sonst deren Inhalte zuordnen an"
 
-#: includes/Admin/Page.php:220
+#: includes/Admin/Page.php:209
 msgid "Start import"
 msgstr "Import starten"
 
-#: includes/Admin/Page.php:222
+#: includes/Admin/Page.php:211
 msgid "Records that already exist from an earlier run of the same package are skipped, so an interrupted import can simply be started again."
 msgstr "Einträge, die aus einem früheren Lauf desselben Pakets schon vorhanden sind, werden übersprungen. Ein abgebrochener Import kann daher einfach neu gestartet werden."
 
-#: includes/Admin/Page.php:266
+#: includes/Admin/Page.php:226
+msgid "Jobs"
+msgstr "Vorgänge"
+
+#: includes/Admin/Page.php:227
+msgid "A job only runs while this page is open. Paused jobs continue where they stopped. Exports contain personal data (addresses, phone numbers, emails); all job files are deleted automatically three days after their last activity."
+msgstr "Ein Vorgang läuft nur, solange diese Seite geöffnet ist. Pausierte Vorgänge machen dort weiter, wo sie aufgehört haben. Exporte enthalten personenbezogene Daten (Adressen, Telefonnummern, E-Mails); alle Dateien eines Vorgangs werden drei Tage nach der letzten Aktivität automatisch gelöscht."
+
+#: includes/Admin/Page.php:231
+msgid "Job"
+msgstr "Vorgang"
+
+#: includes/Admin/Page.php:232
+msgid "Status"
+msgstr "Status"
+
+#: includes/Admin/Page.php:233
+msgid "Progress"
+msgstr "Fortschritt"
+
+#: includes/Admin/Page.php:234
+msgid "Actions"
+msgstr "Aktionen"
+
+#: includes/Admin/Page.php:258
+msgid "running"
+msgstr "läuft"
+
+#: includes/Admin/Page.php:259
+msgid "paused"
+msgstr "pausiert"
+
+#: includes/Admin/Page.php:260
+msgid "finished"
+msgstr "abgeschlossen"
+
+#: includes/Admin/Page.php:261
+msgid "failed"
+msgstr "fehlgeschlagen"
+
+#: includes/Admin/Page.php:263
+msgid "Export"
+msgstr "Export"
+
+#: includes/Admin/Page.php:263
+msgid "Import"
+msgstr "Import"
+
+#. translators: %s: date and time
+#: includes/Admin/Page.php:273
+msgid "started %s"
+msgstr "gestartet am %s"
+
+#. translators: %s: date and time
+#: includes/Admin/Page.php:277
+msgid "last activity %s"
+msgstr "zuletzt aktiv am %s"
+
+#. translators: %d: number of log lines
+#: includes/Admin/Page.php:303
+msgid "Log (%d line)"
+msgid_plural "Log (%d lines)"
+msgstr[0] "Protokoll (%d Zeile)"
+msgstr[1] "Protokoll (%d Zeilen)"
+
+#: includes/Admin/Page.php:316
+msgid "Continue"
+msgstr "Fortsetzen"
+
+#: includes/Admin/Page.php:319
+msgid "Download"
+msgstr "Herunterladen"
+
+#: includes/Admin/Page.php:322
+msgid "Delete this job and its files? Imported content is not affected."
+msgstr "Diesen Vorgang und seine Dateien löschen? Bereits importierte Inhalte bleiben erhalten."
+
+#: includes/Admin/Page.php:322
+msgid "Delete"
+msgstr "Löschen"
+
+#: includes/Admin/Page.php:357
 msgid "Job not found."
 msgstr "Vorgang nicht gefunden."
 
-#: includes/Admin/Page.php:287
+#: includes/Admin/Page.php:378
 msgid "Export not found."
 msgstr "Export nicht gefunden."
 
-#: includes/Admin/Page.php:364
+#: includes/Admin/Page.php:455
 msgid "The selected file does not exist."
 msgstr "Die ausgewählte Datei existiert nicht."
 
-#: includes/Admin/Page.php:374
+#: includes/Admin/Page.php:465
 msgid "The upload failed. The file may be larger than the maximum upload size; use the incoming folder instead."
 msgstr "Der Upload ist fehlgeschlagen. Die Datei ist eventuell größer als die maximale Upload-Größe; verwenden Sie stattdessen den Eingangsordner."
 
-#: includes/Admin/Page.php:385
+#: includes/Admin/Page.php:476
 msgid "The uploaded file could not be stored."
 msgstr "Die hochgeladene Datei konnte nicht gespeichert werden."
 
 #. translators: 1: files done, 2: total files
-#: includes/Admin/Page.php:405
+#: includes/Admin/Page.php:496
 msgid "(%1$d of %2$d)"
 msgstr "(%1$d von %2$d)"
 
-#: includes/Admin/Page.php:473 includes/Admin/Page.php:489
+#: includes/Admin/Page.php:540 includes/Admin/Page.php:556
 msgid "You are not allowed to do this."
 msgstr "Sie haben keine Berechtigung dafür."
 
@@ -476,47 +553,77 @@ msgstr "doppelte Dateiendung mit .%s"
 msgid "file type .%s is unknown to WordPress"
 msgstr "Dateityp .%s ist WordPress unbekannt"
 
-#: includes/Runner.php:106
+#. translators: 1: files packed, 2: total files
+#: includes/Runner.php:128
+msgid "Files packed: %1$s of %2$s"
+msgstr "Dateien gepackt: %1$s von %2$s"
+
+#. translators: %s: file size
+#: includes/Runner.php:132
+msgid "Package size: %s"
+msgstr "Paketgröße: %s"
+
+#. translators: 1: files done, 2: total, 3: downloaded, 4: extracted, 5: already present, 6: failed
+#: includes/Runner.php:140
+msgid "Media files: %1$s of %2$s checked (%3$s downloaded, %4$s extracted, %5$s already present, %6$s failed)"
+msgstr "Mediendateien: %1$s von %2$s geprüft (%3$s heruntergeladen, %4$s entpackt, %5$s bereits vorhanden, %6$s fehlgeschlagen)"
+
+#. translators: 1: created, 2: reused
+#: includes/Runner.php:152
+msgid "Terms: %1$s created, %2$s reused"
+msgstr "Begriffe: %1$s angelegt, %2$s wiederverwendet"
+
+#. translators: %s: number of posts
+#: includes/Runner.php:157
+msgid "Posts and media library entries created: %s"
+msgstr "Angelegte Beiträge und Mediathek-Einträge: %s"
+
+#. translators: %s: number of comments
+#: includes/Runner.php:162
+msgid "Comments: %s"
+msgstr "Kommentare: %s"
+
+#: includes/Runner.php:176
 msgid "Collecting data"
 msgstr "Daten werden gesammelt"
 
-#: includes/Runner.php:107
+#: includes/Runner.php:177
 msgid "Packing media files"
 msgstr "Mediendateien werden gepackt"
 
-#: includes/Runner.php:108
+#: includes/Runner.php:178
 msgid "Checking package"
 msgstr "Paket wird geprüft"
 
-#: includes/Runner.php:109
+#: includes/Runner.php:179
 msgid "Transferring media files"
 msgstr "Mediendateien werden übertragen"
 
-#: includes/Runner.php:110
+#: includes/Runner.php:180
 msgid "Creating kennels, breeders and other terms"
 msgstr "Zwinger, Züchter und weitere Begriffe werden angelegt"
 
-#: includes/Runner.php:111
+#: includes/Runner.php:181
 msgid "Adding term details"
 msgstr "Details der Begriffe werden ergänzt"
 
-#: includes/Runner.php:112
+#: includes/Runner.php:182
 msgid "Creating posts"
 msgstr "Beiträge werden angelegt"
 
-#: includes/Runner.php:113
+#: includes/Runner.php:183
 msgid "Adding fields, pedigrees and assignments"
 msgstr "Felder, Abstammungen und Zuordnungen werden ergänzt"
 
-#: includes/Runner.php:114
+#: includes/Runner.php:184
 msgid "Importing comments"
 msgstr "Kommentare werden importiert"
 
-#: includes/Runner.php:115
+#: includes/Runner.php:185
 msgid "Importing widgets and settings"
 msgstr "Widgets und Einstellungen werden importiert"
 
-#: includes/Runner.php:116
+#: includes/Runner.php:186
 msgid "Finishing"
 msgstr "Abschluss"
 

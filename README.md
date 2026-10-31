@@ -34,12 +34,29 @@ Nicht übertragen werden Revisionen, automatische Entwürfe, Plugin- und Theme-E
 
 Große Pakete, die das Upload-Limit überschreiten, per FTP/SFTP nach `wp-content/uploads/puppypress-migrator/incoming/` hochladen; sie erscheinen dann im Importformular.
 
+### Zwischenstand und Fortsetzen
+
+Ein Vorgang läuft nur, solange die Migrationsseite geöffnet ist. Unten auf der Seite listet die Übersicht **Vorgänge** alle Exporte und Importe mit:
+- Status (läuft, pausiert, abgeschlossen, fehlgeschlagen) und aktueller Etappe
+- Zahlen, z. B. „Mediendateien: 10.350 von 94.710 geprüft (9.800 heruntergeladen, 540 bereits vorhanden, 10 fehlgeschlagen)“
+- vollständigem Protokoll
+
+Pausierte Vorgänge lassen sich dort mit **Fortsetzen** weiterführen, auch nach dem Neuladen oder in einem anderen Browser.
+
+Wo die Mediendateien landen:
+- direkt an ihrem endgültigen Platz in `wp-content/uploads/…`, mit demselben Pfad wie auf der alten Website. Per FTP sind sie sofort sichtbar.
+- in der **Mediathek** erst nach der Etappe „Beiträge werden angelegt“.
+- während des Ladens kurz mit der Endung `.ppm-part`
+- bei einem Namenskonflikt in `wp-content/uploads/ppm-import-…/`
+
 ### Per WP-CLI (empfohlen für große Websites)
 
 ```bash
 wp puppypress-migrator export --dir=/tmp                      # Medien werden beim Import geladen
 wp puppypress-migrator export --dir=/tmp --media-transfer=zip # Medien ins ZIP packen
 wp puppypress-migrator import /tmp/puppypress-export-alte-domain.de-2026-10-31.zip --author=admin
+wp puppypress-migrator status                                 # Vorgänge und Zwischenstand
+wp puppypress-migrator resume <id>                            # pausierten Vorgang fortsetzen
 ```
 
 Weitere Optionen: `wp help puppypress-migrator export` und `wp help puppypress-migrator import`.
@@ -85,7 +102,7 @@ add_filter( 'ppm_blocked_extensions', function ( $extensions ) {
 - **Lücken nachholen:** Ein erneuter Import ergänzt, was beim ersten Lauf nicht ging: fehlende Mediendateien und Taxonomie-Zuordnungen. Das betrifft z. B. die Beitragsformate von Extra/Divi (`et_post_format`), wenn das Theme beim ersten Lauf noch nicht aktiv war. Am besten das spätere Theme (Extra) also schon **vor** dem Import aktivieren.
 - **Keine überschriebenen Dateien:** Liegt auf der neuen Website schon eine andere Datei unter demselben Pfad, landet die importierte Datei samt allen Bildgrößen in `uploads/ppm-import-…/`. Links und Metadaten werden entsprechend angepasst.
 - **Geprüfte Pakete:** Entpackt werden nur Medien mit erlaubten Dateitypen und sauberen Pfaden. Pfade wie `../`, PHP-Dateien oder doppelte Endungen werden abgewiesen (Schutz vor Zip-Slip). Serialisierte Daten werden ohne Objekte entpackt.
-- **Datenschutz:** Exporte enthalten personenbezogene Daten. Sie liegen in einem gegen Webzugriff geschützten Ordner mit zufälligem Namen, lassen sich nur von Administratoren herunterladen und werden nach drei Tagen automatisch gelöscht.
+- **Datenschutz:** Exporte enthalten personenbezogene Daten. Sie liegen in einem gegen Webzugriff geschützten Ordner mit zufälligem Namen, lassen sich nur von Administratoren herunterladen und werden drei Tage nach der letzten Aktivität automatisch gelöscht.
 - Die Inhalte werden unverändert übernommen. Damit nichts verloren geht, ist der HTML-Filter (kses) während des Imports abgeschaltet.
 
 ## Anpassen

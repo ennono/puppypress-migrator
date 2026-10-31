@@ -19,7 +19,7 @@ final class Storage {
 	const DIR = 'puppypress-migrator';
 
 	/**
-	 * Jobs older than this are removed by the daily cleanup.
+	 * Jobs without activity for this long are removed by the daily cleanup.
 	 */
 	const MAX_AGE = 3 * DAY_IN_SECONDS;
 
@@ -119,7 +119,15 @@ final class Storage {
 	 */
 	public static function cleanup() {
 		foreach ( (array) glob( self::base_dir() . '/jobs/*', GLOB_ONLYDIR ) as $dir ) {
-			if ( $dir && filemtime( $dir ) < time() - self::MAX_AGE ) {
+			if ( ! $dir ) {
+				continue;
+			}
+
+			// The state file is rewritten on every step, so this is the time of the last activity.
+			$state = $dir . '/state.json';
+			$time  = is_file( $state ) ? filemtime( $state ) : filemtime( $dir );
+
+			if ( $time < time() - self::MAX_AGE ) {
 				self::rmdir( $dir );
 			}
 		}

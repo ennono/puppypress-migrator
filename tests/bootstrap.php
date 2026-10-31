@@ -15,6 +15,7 @@ define( 'PPM_DIR', dirname( __DIR__ ) . '/' );
 define( 'PPM_URL', 'https://example.org/wp-content/plugins/puppypress-migrator/' );
 define( 'PPM_VERSION', 'test' );
 define( 'PPM_FILE', PPM_DIR . 'puppypress-migrator.php' );
+define( 'MINUTE_IN_SECONDS', 60 );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'DAY_IN_SECONDS', 86400 );
 define( 'ARRAY_A', 'ARRAY_A' );
@@ -235,6 +236,7 @@ function get_bloginfo( $what ) { return 'name' === $what ? 'Test Club' : '6.8'; 
 function get_stylesheet() { return 'extra-child'; }
 function wp_upload_dir() { return array( 'basedir' => $GLOBALS['site']['uploads'], 'baseurl' => $GLOBALS['site']['home'] . '/wp-content/uploads' ); }
 function size_format( $bytes ) { return $bytes . ' B'; }
+function number_format_i18n( $n ) { return number_format( $n, 0, ',', '.' ); }
 function sanitize_file_name( $name ) { return preg_replace( '/[^A-Za-z0-9._-]/', '-', $name ); }
 function wp_parse_url( $url, $component = -1 ) { return parse_url( $url, $component ); }
 function wp_raise_memory_limit() {}

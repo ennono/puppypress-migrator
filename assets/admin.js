@@ -15,6 +15,7 @@
 		title: panel.querySelector( '[data-ppm-title]' ),
 		bar: panel.querySelector( '[data-ppm-bar]' ),
 		stage: panel.querySelector( '[data-ppm-stage]' ),
+		summary: panel.querySelector( '[data-ppm-summary]' ),
 		result: panel.querySelector( '[data-ppm-result]' ),
 		log: panel.querySelector( '[data-ppm-log]' )
 	};
@@ -70,6 +71,13 @@
 		panel.classList.add( 'is-done' );
 		els.result.textContent = config.i18n.done + ' ';
 
+		var reload = document.createElement( 'a' );
+		reload.href = window.location.href;
+		reload.className = 'button';
+		reload.textContent = config.i18n.reload;
+		els.result.appendChild( reload );
+		els.result.appendChild( document.createTextNode( ' ' ) );
+
 		if ( state.download ) {
 			var link = document.createElement( 'a' );
 			link.href = state.download;
@@ -84,7 +92,29 @@
 		addLog( state.log );
 		logTotal = state.logTotal;
 		els.bar.style.width = state.percent + '%';
-		els.stage.textContent = state.stage;
+		els.stage.textContent = state.busy ? config.i18n.busy : state.stage;
+
+		els.summary.textContent = '';
+		( state.summary || [] ).forEach( function ( line ) {
+			var item = document.createElement( 'li' );
+			item.textContent = line;
+			els.summary.appendChild( item );
+		} );
+	}
+
+	function openPanel( title ) {
+		running = true;
+		logTotal = 0;
+		setForms( true );
+		panel.hidden = false;
+		panel.classList.remove( 'is-done', 'is-error' );
+		els.title.textContent = title;
+		els.log.textContent = '';
+		els.summary.textContent = '';
+		els.result.textContent = '';
+		els.bar.style.width = '0';
+		els.stage.textContent = config.i18n.starting;
+		panel.scrollIntoView( { behavior: 'smooth', block: 'start' } );
 	}
 
 	function step( jobId ) {
@@ -99,6 +129,10 @@
 
 				if ( state.done ) {
 					finish( state );
+				} else if ( state.busy ) {
+					window.setTimeout( function () {
+						step( jobId );
+					}, 5000 );
 				} else {
 					step( jobId );
 				}
@@ -148,17 +182,7 @@
 			data.append( 'action', 'ppm_start' );
 			data.append( 'type', type );
 
-			running = true;
-			logTotal = 0;
-			setForms( true );
-			panel.hidden = false;
-			panel.classList.remove( 'is-done', 'is-error' );
-			els.title.textContent = form.closest( '.ppm-card' ).querySelector( 'h2' ).textContent;
-			els.log.textContent = '';
-			els.result.textContent = '';
-			els.bar.style.width = '0';
-			els.stage.textContent = config.i18n.starting;
-			panel.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+			openPanel( form.closest( '.ppm-card' ).querySelector( 'h2' ).textContent );
 
 			post( data )
 				.then( function ( state ) {
@@ -168,6 +192,25 @@
 				.catch( function ( error ) {
 					finish( { error: error.message } );
 				} );
+		} );
+	} );
+
+	document.querySelectorAll( '[data-ppm-resume]' ).forEach( function ( button ) {
+		button.addEventListener( 'click', function () {
+			if ( running ) {
+				return;
+			}
+
+			openPanel( button.getAttribute( 'data-ppm-title' ) );
+			step( button.getAttribute( 'data-ppm-resume' ) );
+		} );
+	} );
+
+	document.querySelectorAll( '[data-ppm-confirm]' ).forEach( function ( link ) {
+		link.addEventListener( 'click', function ( event ) {
+			if ( running || ! window.confirm( link.getAttribute( 'data-ppm-confirm' ) ) ) {
+				event.preventDefault();
+			}
 		} );
 	} );
 
