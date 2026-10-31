@@ -82,6 +82,7 @@ add_filter( 'ppm_blocked_extensions', function ( $extensions ) {
 
 - **Läuft in Etappen:** Export und Import arbeiten in kurzen Schritten (ca. 15 s pro Anfrage). Es gibt keine Timeouts, und ein abgebrochener Vorgang läuft per „Erneut versuchen“ weiter.
 - **Keine Duplikate:** Jeder importierte Eintrag merkt sich seine Herkunft (`_ppm_source`). Wird dasselbe Paket erneut importiert, überspringt der Migrator vorhandene Einträge. Vorhandene Begriffe mit gleichem Slug werden wiederverwendet.
+- **Lücken nachholen:** Ein erneuter Import ergänzt, was beim ersten Lauf nicht ging: fehlende Mediendateien und Taxonomie-Zuordnungen. Das betrifft z. B. die Beitragsformate von Extra/Divi (`et_post_format`), wenn das Theme beim ersten Lauf noch nicht aktiv war. Am besten das spätere Theme (Extra) also schon **vor** dem Import aktivieren.
 - **Keine überschriebenen Dateien:** Liegt auf der neuen Website schon eine andere Datei unter demselben Pfad, landet die importierte Datei samt allen Bildgrößen in `uploads/ppm-import-…/`. Links und Metadaten werden entsprechend angepasst.
 - **Geprüfte Pakete:** Entpackt werden nur Medien mit erlaubten Dateitypen und sauberen Pfaden. Pfade wie `../`, PHP-Dateien oder doppelte Endungen werden abgewiesen (Schutz vor Zip-Slip). Serialisierte Daten werden ohne Objekte entpackt.
 - **Datenschutz:** Exporte enthalten personenbezogene Daten. Sie liegen in einem gegen Webzugriff geschützten Ordner mit zufälligem Namen, lassen sich nur von Administratoren herunterladen und werden nach drei Tagen automatisch gelöscht.

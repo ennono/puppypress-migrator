@@ -5,7 +5,7 @@ Format nach [Keep a Changelog](https://keepachangelog.com/de/1.1.0/), Versionier
 ## [1.1.1] – 2026-10-31
 
 ### Behoben
-- Zuordnungen zu Taxonomien, die beim Import nicht registriert waren (z. B.  von Extra/Divi für Video-, Galerie- oder Zitat-Beiträge), ließen sich nicht nachholen: Ein erneuter Import übersprang bereits importierte Beiträge komplett. Jetzt ergänzt ein erneuter Lauf fehlende Zuordnungen, ohne vorhandene zu entfernen.
+- Zuordnungen zu Taxonomien, die beim Import nicht registriert waren (z. B. `et_post_format` von Extra/Divi für Video-, Galerie- oder Zitat-Beiträge), ließen sich nicht nachholen: Ein erneuter Import übersprang bereits importierte Beiträge komplett. Jetzt ergänzt ein erneuter Lauf fehlende Zuordnungen, ohne vorhandene zu entfernen.
 - Das Protokoll nennt je Taxonomie, wie viele Beiträge ihre Zuordnung verloren haben, und was zu tun ist.
 
 ## [1.1.0] – 2026-10-31
