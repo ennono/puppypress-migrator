@@ -344,8 +344,21 @@ function get_term_by( $field, $value, $taxonomy ) {
 function wp_insert_term( $name, $taxonomy, $args ) {
 	return array( 'term_id' => fake_term( wp_unslash( $name ), $taxonomy, $args['slug'], $args['parent'], wp_unslash( $args['description'] ) ) );
 }
-function wp_set_object_terms( $object_id, $term_ids, $taxonomy ) {
+function wp_set_object_terms( $object_id, $term_ids, $taxonomy, $append = false ) {
+	if ( ! $append ) {
+		foreach ( $GLOBALS['site']['tables']['term_relationships'] as $i => $rel ) {
+			$tt = $GLOBALS['site']['tables']['term_taxonomy'][ $rel['term_taxonomy_id'] ];
+			if ( (int) $rel['object_id'] === (int) $object_id && $tt['taxonomy'] === $taxonomy ) {
+				unset( $GLOBALS['site']['tables']['term_relationships'][ $i ] );
+			}
+		}
+	}
 	foreach ( $term_ids as $term_id ) {
+		foreach ( $GLOBALS['site']['tables']['term_relationships'] as $rel ) {
+			if ( (int) $rel['object_id'] === (int) $object_id && (int) $rel['term_taxonomy_id'] === (int) $term_id ) {
+				continue 2;
+			}
+		}
 		$GLOBALS['site']['tables']['term_relationships'][] = array( 'object_id' => $object_id, 'term_taxonomy_id' => $term_id );
 	}
 }

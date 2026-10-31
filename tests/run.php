@@ -349,6 +349,22 @@ check( 'second import: no new terms', $terms_before === count( $GLOBALS['site'][
 check( 'second import: no new comments', $comments_before === count( $GLOBALS['site']['tables']['comments'] ) );
 check( 'second import: no new widgets', $widgets_before === count( get_option( 'widget_widget_recent_results' ) ) );
 
+$first_log = implode( "\n", wp_list_pluck( $import->state['log'], 'message' ) );
+check( 'skipped assignment logged', false !== strpos( $first_log, '1 posts lost their assignment to "ghost-taxonomy"' ) );
+
+// The theme providing the taxonomy is activated later: another run adds the missing assignment.
+$GLOBALS['site']['taxonomies'][] = 'ghost-taxonomy';
+$repair = Job::create( 'import', Importer::default_options() );
+copy( $package, $repair->path( Importer::ZIP_NAME ) );
+Runner::run( $repair, 0 );
+$ghost = get_term_by( 'slug', 'ghost', 'ghost-taxonomy' );
+check( 'repair run finished', $repair->state['done'] && empty( $repair->state['error'] ) );
+check( 'repair run creates missing term', false !== $ghost );
+$repaired = $terms_of( $arko['ID'] );
+check( 'repair run adds missing assignment', $ghost && in_array( (int) $ghost->term_id, $repaired, true ) );
+check( 'repair run keeps other assignments', ! array_diff( $expected_terms, $repaired ) && count( $expected_terms ) + 1 === count( $repaired ) );
+check( 'repair run creates no posts', $posts_before === count( $GLOBALS['site']['tables']['posts'] ) );
+
 // A resumed import (small time budget) gives the same result.
 fake_site( 'https://third.example', $club_taxonomies );
 $resumed = Job::create( 'import', Importer::default_options() );

@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PuppyPress Migrator 1.0.0\n"
+"Project-Id-Version: PuppyPress Migrator 1.1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 17:49+0000\n"
+"POT-Creation-Date: 2026-10-31 18:10+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -277,7 +277,7 @@ msgstr ""
 msgid "Packing %d files into one ZIP takes long and needs a lot of disk space. If the export stops, choose \"Download during import\" instead."
 msgstr ""
 
-#: includes/Exporter.php:156 includes/Importer.php:820
+#: includes/Exporter.php:156 includes/Importer.php:863
 msgid "The ZIP file could not be opened."
 msgstr ""
 
@@ -384,64 +384,69 @@ msgstr ""
 msgid "\"%1$s\" could not be imported: %2$s"
 msgstr ""
 
-#: includes/Importer.php:682
+#. translators: 1: number of posts, 2: taxonomy
+#: includes/Importer.php:640
+msgid "%1$d posts lost their assignment to \"%2$s\" because this taxonomy is not registered. Activate the theme or plugin that provides it and start the import again to add the assignments."
+msgstr ""
+
+#: includes/Importer.php:725
 msgid "Widgets from this source were imported before and are skipped."
 msgstr ""
 
-#: includes/Importer.php:698
+#: includes/Importer.php:741
 msgid "Front page set."
 msgstr ""
 
-#: includes/Importer.php:716
+#: includes/Importer.php:759
 msgid "Menu locations assigned."
 msgstr ""
 
 #. translators: 1: posts, 2: terms created, 3: terms reused, 4: comments, 5: files
-#: includes/Importer.php:787
+#: includes/Importer.php:830
 msgid "Import finished: %1$d posts, %2$d new terms (%3$d reused), %4$d comments, %5$d files."
 msgstr ""
 
 #. translators: %d: number of references
-#: includes/Importer.php:798
+#: includes/Importer.php:841
 msgid "%d references pointed to content that is not part of the package and were removed."
 msgstr ""
 
-#: includes/Importer.php:841
+#: includes/Importer.php:884
 msgid "The job data is incomplete. Please start the import again."
 msgstr ""
 
 #. translators: 1: user login, 2: error message
-#: includes/Importer.php:979
+#: includes/Importer.php:1022
 msgid "User \"%1$s\" could not be created: %2$s"
 msgstr ""
 
 #. translators: 1: user login, 2: role
-#: includes/Importer.php:985
+#: includes/Importer.php:1028
 msgid "User \"%1$s\" created (role: %2$s, random password)."
 msgstr ""
 
 #. translators: %d: number of files
-#: includes/Importer.php:1115
+#: includes/Importer.php:1158
 msgid "%d files in the package have a forbidden name or type and are ignored."
 msgstr ""
 
 #. translators: %d: number of files
-#: includes/Importer.php:1120
+#: includes/Importer.php:1163
 msgid "%d media files are neither in the package nor marked for download and are skipped."
 msgstr ""
 
 #. translators: 1: number of files, 2: URL
-#: includes/Importer.php:1125
+#: includes/Importer.php:1168
 msgid "%1$d media files will be downloaded from %2$s."
 msgstr ""
 
 #. translators: %s: sidebar ID
-#: includes/Importer.php:1160
+#: includes/Importer.php:1203
 msgid "Sidebar \"%s\" does not exist in the active theme; its widgets were added to the inactive widgets."
 msgstr ""
 
 #. translators: %d: number of widgets
-#: includes/Importer.php:1202
+#: includes/Importer.php:1245
 msgid "%d widgets imported."
 msgstr ""
 

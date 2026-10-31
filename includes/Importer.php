@@ -521,6 +521,11 @@ final class Importer {
 			$old_id = (int) $post['ID'];
 
 			if ( ! isset( $new[ $old_id ] ) ) {
+				// Imported by an earlier run: only add term assignments that are
+				// still missing, e.g. because a taxonomy was not registered then.
+				if ( $remapper->post( $old_id ) ) {
+					$this->assign_terms( $remapper->post( $old_id ), $post['terms'], $remapper, $job, true );
+				}
 				continue;
 			}
 
@@ -568,17 +573,7 @@ final class Importer {
 				}
 			}
 
-			foreach ( $post['terms'] as $taxonomy => $term_ids ) {
-				if ( ! taxonomy_exists( $taxonomy ) ) {
-					continue;
-				}
-
-				$mapped = array_values( array_filter( array_map( array( $remapper, 'term' ), $term_ids ) ) );
-
-				if ( $mapped ) {
-					wp_set_object_terms( $new_id, $mapped, $taxonomy );
-				}
-			}
+			$this->assign_terms( $new_id, $post['terms'], $remapper, $job, false );
 
 			$update = array(
 				'post_modified'     => $post['post_modified'],
@@ -595,7 +590,55 @@ final class Importer {
 
 		$job->state['cursor'] += count( $batch );
 
-		return $job->state['cursor'] >= count( $this->data['posts'] );
+		if ( $job->state['cursor'] < count( $this->data['posts'] ) ) {
+			return false;
+		}
+
+		$this->log_skipped_assignments( $job );
+
+		return true;
+	}
+
+	/**
+	 * Assigns the terms of a post.
+	 *
+	 * @param int      $post_id  New post ID.
+	 * @param array    $terms    Taxonomy => old term IDs.
+	 * @param Remapper $remapper Remapper.
+	 * @param Job      $job      Job.
+	 * @param bool     $append   Keep existing assignments (repeated runs).
+	 */
+	private function assign_terms( $post_id, array $terms, Remapper $remapper, Job $job, $append ) {
+		foreach ( $terms as $taxonomy => $term_ids ) {
+			if ( ! taxonomy_exists( $taxonomy ) ) {
+				if ( ! $append ) {
+					$job->state['stats']['skipped_assignments'][ $taxonomy ] = ( isset( $job->state['stats']['skipped_assignments'][ $taxonomy ] ) ? $job->state['stats']['skipped_assignments'][ $taxonomy ] : 0 ) + 1;
+				}
+				continue;
+			}
+
+			$mapped = array_values( array_filter( array_map( array( $remapper, 'term' ), $term_ids ) ) );
+
+			if ( $mapped ) {
+				wp_set_object_terms( $post_id, $mapped, $taxonomy, $append );
+			}
+		}
+	}
+
+	/**
+	 * Logs how many posts lost assignments to unregistered taxonomies.
+	 *
+	 * @param Job $job Job.
+	 */
+	private function log_skipped_assignments( Job $job ) {
+		if ( empty( $job->state['stats']['skipped_assignments'] ) ) {
+			return;
+		}
+
+		foreach ( $job->state['stats']['skipped_assignments'] as $taxonomy => $count ) {
+			/* translators: 1: number of posts, 2: taxonomy */
+			$job->log( sprintf( __( '%1$d posts lost their assignment to "%2$s" because this taxonomy is not registered. Activate the theme or plugin that provides it and start the import again to add the assignments.', 'puppypress-migrator' ), $count, $taxonomy ), 'warning' );
+		}
 	}
 
 	/**

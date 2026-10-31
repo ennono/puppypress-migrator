@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: PuppyPress Migrator 1.0.0\n"
+"Project-Id-Version: PuppyPress Migrator 1.1.1\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-10-31 17:49+0000\n"
+"PO-Revision-Date: 2026-10-31 18:10+0000\n"
 "Last-Translator: Timo Fricke\n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
@@ -280,7 +280,7 @@ msgstr "Mediendateien werden nicht gepackt. Der Import lädt sie von dieser Webs
 msgid "Packing %d files into one ZIP takes long and needs a lot of disk space. If the export stops, choose \"Download during import\" instead."
 msgstr "%d Dateien in ein ZIP zu packen dauert lange und braucht viel Speicherplatz. Falls der Export abbricht, wählen Sie stattdessen „Beim Import herunterladen“."
 
-#: includes/Exporter.php:156 includes/Importer.php:820
+#: includes/Exporter.php:156 includes/Importer.php:863
 msgid "The ZIP file could not be opened."
 msgstr "Die ZIP-Datei konnte nicht geöffnet werden."
 
@@ -387,64 +387,69 @@ msgstr "Begriff „%1$s“ konnte nicht angelegt werden: %2$s"
 msgid "\"%1$s\" could not be imported: %2$s"
 msgstr "„%1$s“ konnte nicht importiert werden: %2$s"
 
-#: includes/Importer.php:682
+#. translators: 1: number of posts, 2: taxonomy
+#: includes/Importer.php:640
+msgid "%1$d posts lost their assignment to \"%2$s\" because this taxonomy is not registered. Activate the theme or plugin that provides it and start the import again to add the assignments."
+msgstr "%1$d Beiträge haben ihre Zuordnung zu „%2$s“ verloren, weil diese Taxonomie nicht registriert ist. Aktivieren Sie das Theme oder Plugin, das sie bereitstellt, und starten Sie den Import erneut, um die Zuordnungen zu ergänzen."
+
+#: includes/Importer.php:725
 msgid "Widgets from this source were imported before and are skipped."
 msgstr "Widgets aus dieser Quelle wurden bereits importiert und werden übersprungen."
 
-#: includes/Importer.php:698
+#: includes/Importer.php:741
 msgid "Front page set."
 msgstr "Startseite festgelegt."
 
-#: includes/Importer.php:716
+#: includes/Importer.php:759
 msgid "Menu locations assigned."
 msgstr "Menüpositionen zugewiesen."
 
 #. translators: 1: posts, 2: terms created, 3: terms reused, 4: comments, 5: files
-#: includes/Importer.php:787
+#: includes/Importer.php:830
 msgid "Import finished: %1$d posts, %2$d new terms (%3$d reused), %4$d comments, %5$d files."
 msgstr "Import abgeschlossen: %1$d Beiträge, %2$d neue Begriffe (%3$d wiederverwendet), %4$d Kommentare, %5$d Dateien."
 
 #. translators: %d: number of references
-#: includes/Importer.php:798
+#: includes/Importer.php:841
 msgid "%d references pointed to content that is not part of the package and were removed."
 msgstr "%d Verweise zeigten auf Inhalte, die nicht im Paket enthalten sind, und wurden entfernt."
 
-#: includes/Importer.php:841
+#: includes/Importer.php:884
 msgid "The job data is incomplete. Please start the import again."
 msgstr "Die Vorgangsdaten sind unvollständig. Bitte starten Sie den Import erneut."
 
 #. translators: 1: user login, 2: error message
-#: includes/Importer.php:979
+#: includes/Importer.php:1022
 msgid "User \"%1$s\" could not be created: %2$s"
 msgstr "Benutzer „%1$s“ konnte nicht angelegt werden: %2$s"
 
 #. translators: 1: user login, 2: role
-#: includes/Importer.php:985
+#: includes/Importer.php:1028
 msgid "User \"%1$s\" created (role: %2$s, random password)."
 msgstr "Benutzer „%1$s“ angelegt (Rolle: %2$s, zufälliges Passwort)."
 
 #. translators: %d: number of files
-#: includes/Importer.php:1115
+#: includes/Importer.php:1158
 msgid "%d files in the package have a forbidden name or type and are ignored."
 msgstr "%d Dateien im Paket haben einen unzulässigen Namen oder Typ und werden ignoriert."
 
 #. translators: %d: number of files
-#: includes/Importer.php:1120
+#: includes/Importer.php:1163
 msgid "%d media files are neither in the package nor marked for download and are skipped."
 msgstr "%d Mediendateien sind weder im Paket noch zum Herunterladen vorgesehen und werden übersprungen."
 
 #. translators: 1: number of files, 2: URL
-#: includes/Importer.php:1125
+#: includes/Importer.php:1168
 msgid "%1$d media files will be downloaded from %2$s."
 msgstr "%1$d Mediendateien werden von %2$s heruntergeladen."
 
 #. translators: %s: sidebar ID
-#: includes/Importer.php:1160
+#: includes/Importer.php:1203
 msgid "Sidebar \"%s\" does not exist in the active theme; its widgets were added to the inactive widgets."
 msgstr "Die Sidebar „%s“ gibt es im aktiven Theme nicht; ihre Widgets wurden zu den inaktiven Widgets hinzugefügt."
 
 #. translators: %d: number of widgets
-#: includes/Importer.php:1202
+#: includes/Importer.php:1245
 msgid "%d widgets imported."
 msgstr "%d Widgets importiert."
 

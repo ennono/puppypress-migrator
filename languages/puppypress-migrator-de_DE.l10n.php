@@ -1,8 +1,8 @@
 <?php
 return array (
-  'project-id-version' => 'PuppyPress Migrator 1.0.0',
+  'project-id-version' => 'PuppyPress Migrator 1.1.1',
   'report-msgid-bugs-to' => '',
-  'po-revision-date' => '2026-10-31 17:49+0000',
+  'po-revision-date' => '2026-10-31 18:10+0000',
   'last-translator' => 'Timo Fricke',
   'language-team' => 'Deutsch',
   'language' => 'de_DE',
@@ -16,6 +16,7 @@ return array (
     '"%1$s" could not be imported: %2$s' => '„%1$s“ konnte nicht importiert werden: %2$s',
     '%1$d media files could not be transferred. Check that the old site is reachable at %2$s and start the import again; existing files are skipped.' => '%1$d Mediendateien konnten nicht übertragen werden. Prüfen Sie, ob die alte Website unter %2$s erreichbar ist, und starten Sie den Import erneut; vorhandene Dateien werden übersprungen.',
     '%1$d media files will be downloaded from %2$s.' => '%1$d Mediendateien werden von %2$s heruntergeladen.',
+    '%1$d posts lost their assignment to "%2$s" because this taxonomy is not registered. Activate the theme or plugin that provides it and start the import again to add the assignments.' => '%1$d Beiträge haben ihre Zuordnung zu „%2$s“ verloren, weil diese Taxonomie nicht registriert ist. Aktivieren Sie das Theme oder Plugin, das sie bereitstellt, und starten Sie den Import erneut, um die Zuordnungen zu ergänzen.',
     '%1$d terms, %2$d comments, %3$d media files (%4$s).' => '%1$d Begriffe, %2$d Kommentare, %3$d Mediendateien (%4$s).',
     '%1$d × %2$s' => '%1$d × %2$s',
     '%d files in the package have a forbidden name or type and are ignored.' => '%d Dateien im Paket haben einen unzulässigen Namen oder Typ und werden ignoriert.',
