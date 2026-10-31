@@ -41,6 +41,15 @@ final class Command {
 	 *   - none
 	 * ---
 	 *
+	 * [--media-transfer=<transfer>]
+	 * : How media files get to the new site.
+	 * ---
+	 * default: download
+	 * options:
+	 *   - download
+	 *   - zip
+	 * ---
+	 *
 	 * [--skip-content]
 	 * : Do not export posts and pages.
 	 *
@@ -75,6 +84,7 @@ final class Command {
 				'comments' => empty( $assoc_args['skip-comments'] ),
 				'widgets'  => empty( $assoc_args['skip-widgets'] ),
 				'media'    => isset( $assoc_args['media'] ) ? $assoc_args['media'] : 'all',
+				'transfer' => isset( $assoc_args['media-transfer'] ) && 'zip' === $assoc_args['media-transfer'] ? 'zip' : 'download',
 			)
 		);
 
@@ -103,6 +113,9 @@ final class Command {
 	 *
 	 * [--create-users]
 	 * : Create missing authors with random passwords.
+	 *
+	 * [--media-source=<url>]
+	 * : Uploads URL of the old site, if it moved since the export.
 	 *
 	 * [--no-replace-urls]
 	 * : Keep links to the old domain.
@@ -144,6 +157,7 @@ final class Command {
 				'replace_urls' => \WP_CLI\Utils\get_flag_value( $assoc_args, 'replace-urls', true ),
 				'widgets'      => empty( $assoc_args['skip-widgets'] ),
 				'settings'     => empty( $assoc_args['skip-settings'] ),
+				'media_source' => isset( $assoc_args['media-source'] ) ? $assoc_args['media-source'] : '',
 			)
 		);
 
@@ -172,6 +186,11 @@ final class Command {
 			if ( $progress['stage'] && $progress['stage'] !== $stage ) {
 				$stage = $progress['stage'];
 				WP_CLI::log( "» {$stage}" );
+			}
+
+			$stats = $job->state['stats'];
+			if ( ! $job->state['done'] && ! empty( $stats['files_total'] ) && isset( $stats['files_done'] ) && $stats['files_done'] < $stats['files_total'] ) {
+				WP_CLI::log( sprintf( '  %d / %d', $stats['files_done'], $stats['files_total'] ) );
 			}
 
 			foreach ( $job->log_since( $shown ) as $entry ) {

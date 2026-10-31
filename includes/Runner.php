@@ -30,6 +30,8 @@ final class Runner {
 		$stages = $worker->stages();
 		$start  = microtime( true );
 
+		$job->deadline = $seconds > 0 ? $start + $seconds : INF;
+
 		if ( function_exists( 'set_time_limit' ) ) {
 			@set_time_limit( max( 60, (int) $seconds * 4 ) ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
 		}
@@ -104,7 +106,7 @@ final class Runner {
 			'collect'          => __( 'Collecting data', 'puppypress-migrator' ),
 			'media'            => __( 'Packing media files', 'puppypress-migrator' ),
 			'prepare'          => __( 'Checking package', 'puppypress-migrator' ),
-			'files'            => __( 'Extracting media files', 'puppypress-migrator' ),
+			'files'            => __( 'Transferring media files', 'puppypress-migrator' ),
 			'terms'            => __( 'Creating kennels, breeders and other terms', 'puppypress-migrator' ),
 			'term_meta'        => __( 'Adding term details', 'puppypress-migrator' ),
 			'posts'            => __( 'Creating posts', 'puppypress-migrator' ),

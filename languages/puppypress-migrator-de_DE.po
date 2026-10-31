@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PuppyPress Migrator 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"PO-Revision-Date: 2026-10-31 13:43+0000\n"
+"PO-Revision-Date: 2026-10-31 17:49+0000\n"
 "Last-Translator: Timo Fricke\n"
 "Language-Team: Deutsch\n"
 "Language: de_DE\n"
@@ -40,7 +40,7 @@ msgstr "Die Anfrage ist fehlgeschlagen. Beim erneuten Versuch macht der Vorgang 
 msgid "Retry"
 msgstr "Erneut versuchen"
 
-#: includes/Admin/Page.php:85 includes/Admin/Page.php:360
+#: includes/Admin/Page.php:85 includes/Admin/Page.php:378
 msgid "Please choose a ZIP file."
 msgstr "Bitte wählen Sie eine ZIP-Datei."
 
@@ -105,148 +105,214 @@ msgid "No media files"
 msgstr "Keine Mediendateien"
 
 #: includes/Admin/Page.php:128
+msgid "How media files are transferred"
+msgstr "Wie Mediendateien übertragen werden"
+
+#: includes/Admin/Page.php:130
+msgid "Download during import (recommended)"
+msgstr "Beim Import herunterladen (empfohlen)"
+
+#: includes/Admin/Page.php:131
+msgid "The package stays small. The new site downloads the files from this site, which must stay online until the import is finished. Alternatively copy the uploads folder via FTP/rsync beforehand; files that are already there are only checked."
+msgstr "Das Paket bleibt klein. Die neue Website lädt die Dateien von dieser Website herunter, die deshalb bis zum Ende des Imports erreichbar bleiben muss. Alternativ den Ordner uploads vorher per FTP/rsync kopieren; vorhandene Dateien werden dann nur geprüft."
+
+#: includes/Admin/Page.php:134
+msgid "Pack into the ZIP file"
+msgstr "In die ZIP-Datei packen"
+
+#: includes/Admin/Page.php:135
+msgid "Self-contained package. Only suitable for small media libraries (a few thousand files)."
+msgstr "Eigenständiges Paket. Nur für kleine Mediatheken geeignet (wenige tausend Dateien)."
+
+#: includes/Admin/Page.php:139
 msgid "Create export"
 msgstr "Export erstellen"
 
-#: includes/Admin/Page.php:132
+#: includes/Admin/Page.php:143
 msgid "Existing exports"
 msgstr "Vorhandene Exporte"
 
-#: includes/Admin/Page.php:138
+#: includes/Admin/Page.php:149
 msgid "Delete"
 msgstr "Löschen"
 
-#: includes/Admin/Page.php:142
+#: includes/Admin/Page.php:153
 msgid "Exports contain personal data (addresses, phone numbers, emails). They are deleted automatically after three days."
 msgstr "Exporte enthalten personenbezogene Daten (Adressen, Telefonnummern, E-Mails). Sie werden nach drei Tagen automatisch gelöscht."
 
-#: includes/Admin/Page.php:147
+#: includes/Admin/Page.php:158
 msgid "Import (new site with PuppyPress)"
 msgstr "Import (neue Website mit PuppyPress)"
 
-#: includes/Admin/Page.php:150
+#: includes/Admin/Page.php:161
 msgid "PuppyPress is not active on this site. Activate it before importing, otherwise club taxonomies cannot be assigned."
 msgstr "PuppyPress ist auf dieser Website nicht aktiv. Bitte aktivieren Sie es vor dem Import, sonst können die Vereins-Taxonomien nicht zugeordnet werden."
 
-#: includes/Admin/Page.php:155
+#: includes/Admin/Page.php:166
 msgid "Migration package (ZIP)"
 msgstr "Migrationspaket (ZIP)"
 
 #. translators: %s: maximum upload size
-#: includes/Admin/Page.php:160
+#: includes/Admin/Page.php:171
 msgid "Maximum upload size: %s."
 msgstr "Maximale Upload-Größe: %s."
 
-#: includes/Admin/Page.php:167
+#: includes/Admin/Page.php:178
 msgid "Or use a file from the incoming folder"
 msgstr "Oder eine Datei aus dem Eingangsordner verwenden"
 
-#: includes/Admin/Page.php:169
+#: includes/Admin/Page.php:180
 msgid "— Upload above —"
 msgstr "— Upload oben verwenden —"
 
 #. translators: %s: folder path
-#: includes/Admin/Page.php:180
+#: includes/Admin/Page.php:191
 msgid "Large packages: upload them via FTP/SFTP to %s and reload this page."
 msgstr "Große Pakete: per FTP/SFTP nach %s hochladen und diese Seite neu laden."
 
-#: includes/Admin/Page.php:185
+#: includes/Admin/Page.php:196
 msgid "Import options"
 msgstr "Import-Optionen"
 
-#: includes/Admin/Page.php:186
+#: includes/Admin/Page.php:198
+msgid "Download media from (optional)"
+msgstr "Medien herunterladen von (optional)"
+
+#: includes/Admin/Page.php:200
+msgid "Only needed if the old site moved since the export. Empty: the address stored in the package."
+msgstr "Nur nötig, wenn die alte Website seit dem Export umgezogen ist. Leer: die im Paket gespeicherte Adresse."
+
+#: includes/Admin/Page.php:202
 msgid "Replace links to the old domain with this site"
 msgstr "Links auf die alte Domain durch diese Website ersetzen"
 
-#: includes/Admin/Page.php:187
+#: includes/Admin/Page.php:203
 msgid "Import widgets"
 msgstr "Widgets importieren"
 
-#: includes/Admin/Page.php:188
+#: includes/Admin/Page.php:204
 msgid "Apply front page, sticky posts and menu locations"
 msgstr "Startseite, oben gehaltene Beiträge und Menüpositionen übernehmen"
 
-#: includes/Admin/Page.php:189
+#: includes/Admin/Page.php:205
 msgid "Create missing authors (with random passwords)"
 msgstr "Fehlende Autoren anlegen (mit zufälligen Passwörtern)"
 
-#: includes/Admin/Page.php:191
+#: includes/Admin/Page.php:207
 msgid "Otherwise assign their content to"
 msgstr "Sonst deren Inhalte zuordnen an"
 
-#: includes/Admin/Page.php:204
+#: includes/Admin/Page.php:220
 msgid "Start import"
 msgstr "Import starten"
 
-#: includes/Admin/Page.php:206
+#: includes/Admin/Page.php:222
 msgid "Records that already exist from an earlier run of the same package are skipped, so an interrupted import can simply be started again."
 msgstr "Einträge, die aus einem früheren Lauf desselben Pakets schon vorhanden sind, werden übersprungen. Ein abgebrochener Import kann daher einfach neu gestartet werden."
 
-#: includes/Admin/Page.php:250
+#: includes/Admin/Page.php:266
 msgid "Job not found."
 msgstr "Vorgang nicht gefunden."
 
-#: includes/Admin/Page.php:271
+#: includes/Admin/Page.php:287
 msgid "Export not found."
 msgstr "Export nicht gefunden."
 
-#: includes/Admin/Page.php:346
+#: includes/Admin/Page.php:364
 msgid "The selected file does not exist."
 msgstr "Die ausgewählte Datei existiert nicht."
 
-#: includes/Admin/Page.php:356
+#: includes/Admin/Page.php:374
 msgid "The upload failed. The file may be larger than the maximum upload size; use the incoming folder instead."
 msgstr "Der Upload ist fehlgeschlagen. Die Datei ist eventuell größer als die maximale Upload-Größe; verwenden Sie stattdessen den Eingangsordner."
 
-#: includes/Admin/Page.php:367
+#: includes/Admin/Page.php:385
 msgid "The uploaded file could not be stored."
 msgstr "Die hochgeladene Datei konnte nicht gespeichert werden."
 
 #. translators: 1: files done, 2: total files
-#: includes/Admin/Page.php:387
+#: includes/Admin/Page.php:405
 msgid "(%1$d of %2$d)"
 msgstr "(%1$d von %2$d)"
 
-#: includes/Admin/Page.php:455 includes/Admin/Page.php:471
+#: includes/Admin/Page.php:473 includes/Admin/Page.php:489
 msgid "You are not allowed to do this."
 msgstr "Sie haben keine Berechtigung dafür."
 
-#: includes/Exporter.php:62 includes/Importer.php:94
+#. translators: 1: received bytes, 2: expected bytes
+#: includes/Downloader.php:173
+msgid "incomplete (%1$d of %2$d bytes)"
+msgstr "unvollständig (%1$d von %2$d Bytes)"
+
+#: includes/Downloader.php:178
+msgid "could not be saved"
+msgstr "konnte nicht gespeichert werden"
+
+#: includes/Exporter.php:73 includes/Importer.php:94
 msgid "The PHP extension \"zip\" (ZipArchive) is required."
 msgstr "Die PHP-Erweiterung „zip“ (ZipArchive) wird benötigt."
 
 #. translators: %s: technical error message
-#: includes/Exporter.php:81
+#: includes/Exporter.php:94
 msgid "The data could not be encoded: %s"
 msgstr "Die Daten konnten nicht kodiert werden: %s"
 
-#: includes/Exporter.php:86
+#: includes/Exporter.php:99
 msgid "The ZIP file could not be created."
 msgstr "Die ZIP-Datei konnte nicht erstellt werden."
 
 #. translators: 1: number, 2: post type
-#: includes/Exporter.php:101
+#: includes/Exporter.php:117
 msgid "%1$d × %2$s"
 msgstr "%1$d × %2$s"
 
-#. translators: 1: number of terms, 2: number of comments, 3: number of media files
-#: includes/Exporter.php:105
-msgid "%1$d terms, %2$d comments, %3$d media files."
-msgstr "%1$d Begriffe, %2$d Kommentare, %3$d Mediendateien."
+#. translators: 1: number of terms, 2: number of comments, 3: number of media files, 4: size
+#: includes/Exporter.php:121
+msgid "%1$d terms, %2$d comments, %3$d media files (%4$s)."
+msgstr "%1$d Begriffe, %2$d Kommentare, %3$d Mediendateien (%4$s)."
 
-#: includes/Exporter.php:131 includes/Importer.php:729
+#: includes/Exporter.php:126
+msgid "Media files are not packed. The import downloads them from this site, so it must stay online until the import is finished. Files that were already copied to the new site (e.g. via FTP or rsync) are only checked."
+msgstr "Mediendateien werden nicht gepackt. Der Import lädt sie von dieser Website herunter; sie muss deshalb bis zum Ende des Imports erreichbar bleiben. Dateien, die schon auf die neue Website kopiert wurden (z. B. per FTP oder rsync), werden nur geprüft."
+
+#. translators: %d: number of files
+#: includes/Exporter.php:129
+msgid "Packing %d files into one ZIP takes long and needs a lot of disk space. If the export stops, choose \"Download during import\" instead."
+msgstr "%d Dateien in ein ZIP zu packen dauert lange und braucht viel Speicherplatz. Falls der Export abbricht, wählen Sie stattdessen „Beim Import herunterladen“."
+
+#: includes/Exporter.php:156 includes/Importer.php:820
 msgid "The ZIP file could not be opened."
 msgstr "Die ZIP-Datei konnte nicht geöffnet werden."
 
 #. translators: %s: file size
-#: includes/Exporter.php:164
+#: includes/Exporter.php:189
 msgid "Export finished (%s)."
 msgstr "Export abgeschlossen (%s)."
 
 #. translators: %s: file path
-#: includes/Exporter.php:491
-msgid "Media file missing or not allowed, skipped: %s"
-msgstr "Mediendatei fehlt oder ist nicht erlaubt, übersprungen: %s"
+#: includes/Exporter.php:554
+msgid "File is missing on the server: %s"
+msgstr "Datei fehlt auf dem Server: %s"
+
+#. translators: 1: file path, 2: reason
+#: includes/Exporter.php:557
+msgid "Not transferred (%2$s): %1$s"
+msgstr "Nicht übertragen (%2$s): %1$s"
+
+#. translators: %d: number of files
+#: includes/Exporter.php:571
+msgid "%d media library entries point to files that do not exist on the server (deleted, moved or stored externally)."
+msgstr "%d Einträge der Mediathek verweisen auf Dateien, die es auf dem Server nicht gibt (gelöscht, verschoben oder extern gespeichert)."
+
+#. translators: %d: number of files
+#: includes/Exporter.php:576
+msgid "%d media files were not transferred because of their file type or name (see above)."
+msgstr "%d Mediendateien wurden wegen ihres Dateityps oder Namens nicht übertragen (siehe oben)."
+
+#. translators: %d: number of files
+#: includes/Exporter.php:582
+msgid "Only the first %d of these files are listed individually."
+msgstr "Nur die ersten %d dieser Dateien werden einzeln aufgeführt."
 
 #: includes/Importer.php:101
 msgid "This is not a PuppyPress migration package (data.json is missing)."
@@ -288,113 +354,164 @@ msgstr "Diese Taxonomien sind auf dieser Website nicht registriert und werden ü
 msgid "%d posts from this package already exist and will be skipped."
 msgstr "%d Beiträge aus diesem Paket sind bereits vorhanden und werden übersprungen."
 
-#. translators: %s: file path
-#: includes/Importer.php:211
-msgid "Could not extract %s."
-msgstr "%s konnte nicht entpackt werden."
+#. translators: 1: number of files, 2: URL
+#: includes/Importer.php:250
+msgid "%1$d media files could not be transferred. Check that the old site is reachable at %2$s and start the import again; existing files are skipped."
+msgstr "%1$d Mediendateien konnten nicht übertragen werden. Prüfen Sie, ob die alte Website unter %2$s erreichbar ist, und starten Sie den Import erneut; vorhandene Dateien werden übersprungen."
+
+#. translators: 1: downloaded, 2: extracted, 3: already present
+#: includes/Importer.php:254
+msgid "Media files: %1$d downloaded, %2$d extracted from the package, %3$d already present."
+msgstr "Mediendateien: %1$d heruntergeladen, %2$d aus dem Paket entpackt, %3$d bereits vorhanden."
+
+#: includes/Importer.php:274
+msgid "not readable in the package"
+msgstr "im Paket nicht lesbar"
+
+#. translators: 1: file path, 2: reason
+#: includes/Importer.php:312
+msgid "Media file not transferred (%2$s): %1$s"
+msgstr "Mediendatei nicht übertragen (%2$s): %1$s"
+
+#: includes/Importer.php:314
+msgid "Further failed files are only counted."
+msgstr "Weitere fehlgeschlagene Dateien werden nur gezählt."
 
 #. translators: 1: term name, 2: error message
-#: includes/Importer.php:278
+#: includes/Importer.php:369
 msgid "Term \"%1$s\" could not be created: %2$s"
 msgstr "Begriff „%1$s“ konnte nicht angelegt werden: %2$s"
 
 #. translators: 1: post title, 2: error message
-#: includes/Importer.php:394
+#: includes/Importer.php:485
 msgid "\"%1$s\" could not be imported: %2$s"
 msgstr "„%1$s“ konnte nicht importiert werden: %2$s"
 
-#: includes/Importer.php:591
+#: includes/Importer.php:682
 msgid "Widgets from this source were imported before and are skipped."
 msgstr "Widgets aus dieser Quelle wurden bereits importiert und werden übersprungen."
 
-#: includes/Importer.php:607
+#: includes/Importer.php:698
 msgid "Front page set."
 msgstr "Startseite festgelegt."
 
-#: includes/Importer.php:625
+#: includes/Importer.php:716
 msgid "Menu locations assigned."
 msgstr "Menüpositionen zugewiesen."
 
 #. translators: 1: posts, 2: terms created, 3: terms reused, 4: comments, 5: files
-#: includes/Importer.php:696
+#: includes/Importer.php:787
 msgid "Import finished: %1$d posts, %2$d new terms (%3$d reused), %4$d comments, %5$d files."
 msgstr "Import abgeschlossen: %1$d Beiträge, %2$d neue Begriffe (%3$d wiederverwendet), %4$d Kommentare, %5$d Dateien."
 
 #. translators: %d: number of references
-#: includes/Importer.php:707
+#: includes/Importer.php:798
 msgid "%d references pointed to content that is not part of the package and were removed."
 msgstr "%d Verweise zeigten auf Inhalte, die nicht im Paket enthalten sind, und wurden entfernt."
 
-#: includes/Importer.php:750
+#: includes/Importer.php:841
 msgid "The job data is incomplete. Please start the import again."
 msgstr "Die Vorgangsdaten sind unvollständig. Bitte starten Sie den Import erneut."
 
 #. translators: 1: user login, 2: error message
-#: includes/Importer.php:888
+#: includes/Importer.php:979
 msgid "User \"%1$s\" could not be created: %2$s"
 msgstr "Benutzer „%1$s“ konnte nicht angelegt werden: %2$s"
 
 #. translators: 1: user login, 2: role
-#: includes/Importer.php:894
+#: includes/Importer.php:985
 msgid "User \"%1$s\" created (role: %2$s, random password)."
 msgstr "Benutzer „%1$s“ angelegt (Rolle: %2$s, zufälliges Passwort)."
 
 #. translators: %d: number of files
-#: includes/Importer.php:988
+#: includes/Importer.php:1115
 msgid "%d files in the package have a forbidden name or type and are ignored."
 msgstr "%d Dateien im Paket haben einen unzulässigen Namen oder Typ und werden ignoriert."
 
+#. translators: %d: number of files
+#: includes/Importer.php:1120
+msgid "%d media files are neither in the package nor marked for download and are skipped."
+msgstr "%d Mediendateien sind weder im Paket noch zum Herunterladen vorgesehen und werden übersprungen."
+
+#. translators: 1: number of files, 2: URL
+#: includes/Importer.php:1125
+msgid "%1$d media files will be downloaded from %2$s."
+msgstr "%1$d Mediendateien werden von %2$s heruntergeladen."
+
 #. translators: %s: sidebar ID
-#: includes/Importer.php:1023
+#: includes/Importer.php:1160
 msgid "Sidebar \"%s\" does not exist in the active theme; its widgets were added to the inactive widgets."
 msgstr "Die Sidebar „%s“ gibt es im aktiven Theme nicht; ihre Widgets wurden zu den inaktiven Widgets hinzugefügt."
 
 #. translators: %d: number of widgets
-#: includes/Importer.php:1065
+#: includes/Importer.php:1202
 msgid "%d widgets imported."
 msgstr "%d Widgets importiert."
 
-#: includes/Runner.php:104
+#: includes/Package.php:62
+msgid "invalid path"
+msgstr "ungültiger Pfad"
+
+#: includes/Package.php:68
+msgid "hidden file"
+msgstr "versteckte Datei"
+
+#. translators: %s: file extension
+#: includes/Package.php:80
+msgid "file type .%s is blocked for security reasons"
+msgstr "Dateityp .%s ist aus Sicherheitsgründen gesperrt"
+
+#. translators: %s: file extension
+#: includes/Package.php:82
+msgid "double extension with .%s"
+msgstr "doppelte Dateiendung mit .%s"
+
+#. translators: %s: file extension
+#: includes/Package.php:90
+msgid "file type .%s is unknown to WordPress"
+msgstr "Dateityp .%s ist WordPress unbekannt"
+
+#: includes/Runner.php:106
 msgid "Collecting data"
 msgstr "Daten werden gesammelt"
 
-#: includes/Runner.php:105
+#: includes/Runner.php:107
 msgid "Packing media files"
 msgstr "Mediendateien werden gepackt"
 
-#: includes/Runner.php:106
+#: includes/Runner.php:108
 msgid "Checking package"
 msgstr "Paket wird geprüft"
 
-#: includes/Runner.php:107
-msgid "Extracting media files"
-msgstr "Mediendateien werden entpackt"
+#: includes/Runner.php:109
+msgid "Transferring media files"
+msgstr "Mediendateien werden übertragen"
 
-#: includes/Runner.php:108
+#: includes/Runner.php:110
 msgid "Creating kennels, breeders and other terms"
 msgstr "Zwinger, Züchter und weitere Begriffe werden angelegt"
 
-#: includes/Runner.php:109
+#: includes/Runner.php:111
 msgid "Adding term details"
 msgstr "Details der Begriffe werden ergänzt"
 
-#: includes/Runner.php:110
+#: includes/Runner.php:112
 msgid "Creating posts"
 msgstr "Beiträge werden angelegt"
 
-#: includes/Runner.php:111
+#: includes/Runner.php:113
 msgid "Adding fields, pedigrees and assignments"
 msgstr "Felder, Abstammungen und Zuordnungen werden ergänzt"
 
-#: includes/Runner.php:112
+#: includes/Runner.php:114
 msgid "Importing comments"
 msgstr "Kommentare werden importiert"
 
-#: includes/Runner.php:113
+#: includes/Runner.php:115
 msgid "Importing widgets and settings"
 msgstr "Widgets und Einstellungen werden importiert"
 
-#: includes/Runner.php:114
+#: includes/Runner.php:116
 msgid "Finishing"
 msgstr "Abschluss"
 

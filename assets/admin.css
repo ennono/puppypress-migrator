@@ -100,3 +100,11 @@
 	color: #b32d2e;
 	font-weight: 600;
 }
+
+.ppm-transfer {
+	margin: 1em 0 0;
+}
+
+.ppm-transfer legend {
+	font-weight: 600;
+}

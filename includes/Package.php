@@ -17,7 +17,10 @@ defined( 'ABSPATH' ) || exit;
 final class Package {
 
 	const FORMAT  = 'puppypress-migration';
-	const VERSION = 1;
+	/**
+	 * Format version. 2 added file sizes and media transfer by download.
+	 */
+	const VERSION = 2;
 
 	const DATA_ENTRY    = 'data.json';
 	const UPLOADS_ENTRY = 'uploads/';
@@ -43,34 +46,64 @@ final class Package {
 	 * @return bool
 	 */
 	public static function is_allowed_upload_path( $path ) {
+		return '' === self::rejection_reason( $path );
+	}
+
+	/**
+	 * Why a media path is not transferred.
+	 *
+	 * @param string $path Path relative to uploads/.
+	 * @return string Empty string if the path is allowed, otherwise a short reason.
+	 */
+	public static function rejection_reason( $path ) {
 		$path = (string) $path;
 
-		if ( '' === $path || false !== strpos( $path, "\0" ) || false !== strpos( $path, '\\' ) || '/' === $path[0] || preg_match( '#(^|/)\.\.?(/|$)#', $path ) || preg_match( '#^[a-z]:#i', $path ) ) {
-			return false;
-		}
-
-		if ( 0 !== validate_file( $path ) ) {
-			return false;
+		if ( '' === $path || false !== strpos( $path, "\0" ) || false !== strpos( $path, '\\' ) || '/' === $path[0] || preg_match( '#(^|/)\.\.?(/|$)#', $path ) || preg_match( '#^[a-z]:#i', $path ) || 0 !== validate_file( $path ) ) {
+			return __( 'invalid path', 'puppypress-migrator' );
 		}
 
 		$basename = basename( $path );
 
 		if ( '.' === $basename[0] ) {
-			return false;
+			return __( 'hidden file', 'puppypress-migrator' );
 		}
 
-		$parts = explode( '.', strtolower( $basename ) );
+		$parts     = explode( '.', strtolower( $basename ) );
+		$extension = count( $parts ) > 1 ? end( $parts ) : '';
 		array_shift( $parts );
 
-		// Reject double extensions like "dog.php.jpg" and blocked types anywhere in the name.
+		// Reject blocked types, also hidden in double extensions like "dog.php.jpg".
 		foreach ( $parts as $part ) {
-			if ( in_array( $part, self::BLOCKED_EXTENSIONS, true ) ) {
-				return false;
+			if ( in_array( $part, self::blocked_extensions(), true ) ) {
+				return $part === $extension
+					/* translators: %s: file extension */
+					? sprintf( __( 'file type .%s is blocked for security reasons', 'puppypress-migrator' ), $part )
+					/* translators: %s: file extension */
+					: sprintf( __( 'double extension with .%s', 'puppypress-migrator' ), $part );
 			}
 		}
 
 		$type = wp_check_filetype( $basename, wp_get_mime_types() );
 
-		return ! empty( $type['ext'] );
+		if ( empty( $type['ext'] ) ) {
+			/* translators: %s: file extension */
+			return sprintf( __( 'file type .%s is unknown to WordPress', 'puppypress-migrator' ), $extension );
+		}
+
+		return '';
+	}
+
+	/**
+	 * Blocked extensions (filterable, e.g. to allow SVG between trusted sites).
+	 *
+	 * @return string[]
+	 */
+	public static function blocked_extensions() {
+		/**
+		 * Filters the file extensions that are never transferred.
+		 *
+		 * @param string[] $extensions Lower case extensions without dot.
+		 */
+		return (array) apply_filters( 'ppm_blocked_extensions', self::BLOCKED_EXTENSIONS );
 	}
 }

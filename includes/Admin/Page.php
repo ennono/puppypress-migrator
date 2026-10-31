@@ -124,6 +124,17 @@ final class Page {
 									<option value="none"><?php esc_html_e( 'No media files', 'puppypress-migrator' ); ?></option>
 								</select>
 							</p>
+							<fieldset class="ppm-transfer">
+								<legend><?php esc_html_e( 'How media files are transferred', 'puppypress-migrator' ); ?></legend>
+								<p>
+									<label><input type="radio" name="transfer" value="download" checked> <?php esc_html_e( 'Download during import (recommended)', 'puppypress-migrator' ); ?></label><br>
+									<span class="description"><?php esc_html_e( 'The package stays small. The new site downloads the files from this site, which must stay online until the import is finished. Alternatively copy the uploads folder via FTP/rsync beforehand; files that are already there are only checked.', 'puppypress-migrator' ); ?></span>
+								</p>
+								<p>
+									<label><input type="radio" name="transfer" value="zip"> <?php esc_html_e( 'Pack into the ZIP file', 'puppypress-migrator' ); ?></label><br>
+									<span class="description"><?php esc_html_e( 'Self-contained package. Only suitable for small media libraries (a few thousand files).', 'puppypress-migrator' ); ?></span>
+								</p>
+							</fieldset>
 						</fieldset>
 						<p><button type="submit" class="button button-primary"><?php esc_html_e( 'Create export', 'puppypress-migrator' ); ?></button></p>
 					</form>
@@ -183,6 +194,11 @@ final class Page {
 
 						<fieldset>
 							<legend class="screen-reader-text"><?php esc_html_e( 'Import options', 'puppypress-migrator' ); ?></legend>
+							<p>
+								<label for="ppm-media-source"><?php esc_html_e( 'Download media from (optional)', 'puppypress-migrator' ); ?></label><br>
+								<input type="url" class="regular-text" name="media_source" id="ppm-media-source" placeholder="https://alte-domain.de/wp-content/uploads">
+								<br><span class="description"><?php esc_html_e( 'Only needed if the old site moved since the export. Empty: the address stored in the package.', 'puppypress-migrator' ); ?></span>
+							</p>
 							<p><label><input type="checkbox" name="replace_urls" value="1" checked> <?php esc_html_e( 'Replace links to the old domain with this site', 'puppypress-migrator' ); ?></label></p>
 							<p><label><input type="checkbox" name="widgets" value="1" checked> <?php esc_html_e( 'Import widgets', 'puppypress-migrator' ); ?></label></p>
 							<p><label><input type="checkbox" name="settings" value="1" checked> <?php esc_html_e( 'Apply front page, sticky posts and menu locations', 'puppypress-migrator' ); ?></label></p>
@@ -315,6 +331,7 @@ final class Page {
 				'comments' => ! empty( $_POST['comments'] ),
 				'widgets'  => ! empty( $_POST['widgets'] ),
 				'media'    => in_array( $media, array( 'all', 'referenced', 'none' ), true ) ? $media : 'all',
+				'transfer' => isset( $_POST['transfer'] ) && 'zip' === $_POST['transfer'] ? 'zip' : 'download',
 			)
 		);
 		// phpcs:enable
@@ -333,6 +350,7 @@ final class Page {
 			'replace_urls' => ! empty( $_POST['replace_urls'] ),
 			'widgets'      => ! empty( $_POST['widgets'] ),
 			'settings'     => ! empty( $_POST['settings'] ),
+			'media_source' => isset( $_POST['media_source'] ) ? esc_url_raw( wp_unslash( $_POST['media_source'] ) ) : '',
 		);
 
 		$incoming = isset( $_POST['incoming'] ) ? sanitize_file_name( wp_unslash( $_POST['incoming'] ) ) : '';
@@ -382,7 +400,7 @@ final class Page {
 		$stats    = $job->state['stats'];
 
 		// Finer progress for long stages.
-		if ( ! $job->state['done'] && 'media' === ( isset( $job->state['stage_name'] ) ? $job->state['stage_name'] : '' ) && ! empty( $stats['files_total'] ) ) {
+		if ( ! $job->state['done'] && in_array( isset( $job->state['stage_name'] ) ? $job->state['stage_name'] : '', array( 'media', 'files' ), true ) && ! empty( $stats['files_total'] ) ) {
 			/* translators: 1: files done, 2: total files */
 			$progress['stage'] .= ' ' . sprintf( __( '(%1$d of %2$d)', 'puppypress-migrator' ), $stats['files_done'], $stats['files_total'] );
 		}

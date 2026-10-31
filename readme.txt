@@ -4,7 +4,7 @@ Tags: migration, import, export, dogs, breeding
 Requires at least: 6.0
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -24,6 +24,10 @@ Works in resumable steps (no timeouts), never duplicates records when run twice,
 4. New site: Tools → PuppyPress Migration → upload the ZIP → Start import.
 
 == Changelog ==
+
+= 1.1.0 =
+* Media files can be downloaded from the old site during import instead of being packed (default). Needed for large media libraries.
+* Separate messages for missing and rejected media files, including the reason.
 
 = 1.0.0 =
 * Initial release.

@@ -28,6 +28,16 @@ final class Exporter {
 	const FILES_PER_STEP = 150;
 
 	/**
+	 * Above this number of files, packing into the ZIP is discouraged.
+	 */
+	const ZIP_FILES_WARNING = 3000;
+
+	/**
+	 * Individual log lines per problem type before only counting.
+	 */
+	const LOG_LIMIT = 50;
+
+	/**
 	 * Default options.
 	 *
 	 * @return array
@@ -38,7 +48,8 @@ final class Exporter {
 			'menus'    => true,
 			'comments' => true,
 			'widgets'  => true,
-			'media'    => 'all', // all|referenced|none.
+			'media'    => 'all',      // all|referenced|none.
+			'transfer' => 'download', // download: the import fetches files from this site; zip: files are packed.
 		);
 	}
 
@@ -65,10 +76,12 @@ final class Exporter {
 		$options = wp_parse_args( $job->state['options'], self::default_options() );
 		$data    = $this->collect_data( $options, $job );
 		$files   = array();
+		$bytes   = 0;
 
 		foreach ( $data['posts'] as $post ) {
-			if ( ! empty( $post['files'] ) ) {
-				$files = array_merge( $files, $post['files'] );
+			if ( ! empty( $post['file_sizes'] ) ) {
+				$files  = array_merge( $files, array_keys( $post['file_sizes'] ) );
+				$bytes += array_sum( $post['file_sizes'] );
 			}
 		}
 
@@ -88,7 +101,10 @@ final class Exporter {
 		$zip->addFromString( Package::DATA_ENTRY, $json );
 		$zip->close();
 
-		file_put_contents( $job->path( self::FILES_LIST ), wp_json_encode( $files ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		$pack = 'zip' === $options['transfer'];
+
+		// Only packed files go through the "media" stage.
+		file_put_contents( $job->path( self::FILES_LIST ), wp_json_encode( $pack ? $files : array() ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 
 		$counts = array();
 		foreach ( $data['posts'] as $post ) {
@@ -101,10 +117,19 @@ final class Exporter {
 			$job->log( sprintf( __( '%1$d × %2$s', 'puppypress-migrator' ), $count, $type ) );
 		}
 
-		/* translators: 1: number of terms, 2: number of comments, 3: number of media files */
-		$job->log( sprintf( __( '%1$d terms, %2$d comments, %3$d media files.', 'puppypress-migrator' ), count( $data['terms'] ), count( $data['comments'] ), count( $files ) ) );
+		/* translators: 1: number of terms, 2: number of comments, 3: number of media files, 4: size */
+		$job->log( sprintf( __( '%1$d terms, %2$d comments, %3$d media files (%4$s).', 'puppypress-migrator' ), count( $data['terms'] ), count( $data['comments'] ), count( $files ), size_format( $bytes, 1 ) ) );
 
-		$job->state['stats']['files_total'] = count( $files );
+		$this->log_file_problems( $job );
+
+		if ( $files && ! $pack ) {
+			$job->log( __( 'Media files are not packed. The import downloads them from this site, so it must stay online until the import is finished. Files that were already copied to the new site (e.g. via FTP or rsync) are only checked.', 'puppypress-migrator' ) );
+		} elseif ( $pack && count( $files ) > self::ZIP_FILES_WARNING ) {
+			/* translators: %d: number of files */
+			$job->log( sprintf( __( 'Packing %d files into one ZIP takes long and needs a lot of disk space. If the export stops, choose "Download during import" instead.', 'puppypress-migrator' ), count( $files ) ), 'warning' );
+		}
+
+		$job->state['stats']['files_total'] = $pack ? count( $files ) : 0;
 		$job->state['stats']['files_done']  = 0;
 
 		return true;
@@ -234,7 +259,8 @@ final class Exporter {
 			}
 
 			if ( 'attachment' === $post['post_type'] ) {
-				$posts[ $id ]['files'] = $this->attachment_files( $posts[ $id ]['meta'], $basedir, $job );
+				$posts[ $id ]['file_sizes'] = $this->attachment_files( $posts[ $id ]['meta'], $basedir, $job );
+				$posts[ $id ]['files']      = array_keys( $posts[ $id ]['file_sizes'] );
 			}
 		}
 
@@ -457,7 +483,7 @@ final class Exporter {
 	 * @param array  $meta    Attachment meta.
 	 * @param string $basedir Uploads base dir with trailing slash.
 	 * @param Job    $job     Job.
-	 * @return string[] Paths relative to uploads.
+	 * @return array<string, int> Paths relative to uploads => size in bytes.
 	 */
 	private function attachment_files( array $meta, $basedir, Job $job ) {
 		if ( empty( $meta['_wp_attached_file'][0] ) ) {
@@ -484,15 +510,79 @@ final class Exporter {
 
 		$existing = array();
 		foreach ( array_unique( $files ) as $file ) {
-			if ( is_file( $basedir . $file ) && Package::is_allowed_upload_path( $file ) ) {
-				$existing[] = $file;
-			} elseif ( $file === $main ) {
-				/* translators: %s: file path */
-				$job->log( sprintf( __( 'Media file missing or not allowed, skipped: %s', 'puppypress-migrator' ), $file ), 'warning' );
+			$reason = Package::rejection_reason( $file );
+
+			if ( '' !== $reason ) {
+				if ( $file === $main ) {
+					$this->file_problem( $job, 'rejected', $file, $reason );
+				}
+				continue;
 			}
+
+			if ( ! is_file( $basedir . $file ) ) {
+				// Missing generated sizes are common and harmless; only report the original.
+				if ( $file === $main ) {
+					$this->file_problem( $job, 'missing', $file );
+				}
+				continue;
+			}
+
+			$existing[ $file ] = (int) filesize( $basedir . $file );
 		}
 
 		return $existing;
+	}
+
+	/**
+	 * Records a problem with a media file; logs the first ones individually.
+	 *
+	 * @param Job    $job    Job.
+	 * @param string $type   missing|rejected.
+	 * @param string $file   Relative path.
+	 * @param string $reason Reason for rejected files.
+	 */
+	private function file_problem( Job $job, $type, $file, $reason = '' ) {
+		$job->count( 'files_' . $type );
+		$count = $job->state['stats'][ 'files_' . $type ];
+
+		if ( $count > self::LOG_LIMIT ) {
+			return;
+		}
+
+		if ( 'missing' === $type ) {
+			/* translators: %s: file path */
+			$job->log( sprintf( __( 'File is missing on the server: %s', 'puppypress-migrator' ), $file ), 'warning' );
+		} else {
+			/* translators: 1: file path, 2: reason */
+			$job->log( sprintf( __( 'Not transferred (%2$s): %1$s', 'puppypress-migrator' ), $file, $reason ), 'warning' );
+		}
+	}
+
+	/**
+	 * Summary of media problems.
+	 *
+	 * @param Job $job Job.
+	 */
+	private function log_file_problems( Job $job ) {
+		$stats = $job->state['stats'];
+
+		if ( ! empty( $stats['files_missing'] ) ) {
+			/* translators: %d: number of files */
+			$job->log( sprintf( __( '%d media library entries point to files that do not exist on the server (deleted, moved or stored externally).', 'puppypress-migrator' ), $stats['files_missing'] ), 'warning' );
+		}
+
+		if ( ! empty( $stats['files_rejected'] ) ) {
+			/* translators: %d: number of files */
+			$job->log( sprintf( __( '%d media files were not transferred because of their file type or name (see above).', 'puppypress-migrator' ), $stats['files_rejected'] ), 'warning' );
+		}
+
+		foreach ( array( 'files_missing', 'files_rejected' ) as $key ) {
+			if ( ! empty( $stats[ $key ] ) && $stats[ $key ] > self::LOG_LIMIT ) {
+				/* translators: %d: number of files */
+				$job->log( sprintf( __( 'Only the first %d of these files are listed individually.', 'puppypress-migrator' ), self::LOG_LIMIT ), 'warning' );
+				break;
+			}
+		}
 	}
 
 	/**

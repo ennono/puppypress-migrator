@@ -30,7 +30,6 @@ final class Importer {
 	 * Items per step and stage.
 	 */
 	const BATCH = array(
-		'files'     => 200,
 		'terms'     => 200,
 		'term_meta' => 300,
 		'posts'     => 100,
@@ -65,6 +64,7 @@ final class Importer {
 			'replace_urls' => true,  // Replace old site and upload URLs.
 			'widgets'      => true,
 			'settings'     => true,  // Front page, posts page, sticky posts, menu locations.
+			'media_source' => '',    // Uploads URL of the old site; empty = URL stored in the package.
 		);
 	}
 
@@ -158,6 +158,10 @@ final class Importer {
 			$job->log( sprintf( __( '%d posts from this package already exist and will be skipped.', 'puppypress-migrator' ), count( $this->maps['posts'] ) ) );
 		}
 
+		$options = wp_parse_args( $job->state['options'], self::default_options() );
+		$source_uploads = '' !== trim( (string) $options['media_source'] ) ? esc_url_raw( trim( $options['media_source'] ) ) : $data['source']['uploads_baseurl'];
+
+		$this->maps['media_source'] = untrailingslashit( $source_uploads );
 		$this->plan_files( $zip, $job );
 		$zip->close();
 
@@ -174,7 +178,8 @@ final class Importer {
 	}
 
 	/**
-	 * Extracts media files in batches.
+	 * Transfers media files: extracts them from the package or downloads them
+	 * from the old site. Works until the request's time budget is used up.
 	 *
 	 * @param Job $job Job.
 	 * @return bool
@@ -182,18 +187,21 @@ final class Importer {
 	public function files( Job $job ) {
 		$this->load( $job );
 
-		$plan  = array_keys( $this->maps['files'] );
-		$batch = array_slice( $plan, $job->state['cursor'], self::BATCH['files'] );
-
-		if ( ! $batch ) {
-			return true;
-		}
-
-		$zip     = $this->open_zip( $job );
+		$plan    = array_keys( $this->maps['files'] );
+		$total   = count( $plan );
 		$basedir = trailingslashit( wp_upload_dir( null, false )['basedir'] );
+		$zip     = null;
+		$queue   = array();
 
-		foreach ( $batch as $old ) {
+		$job->state['stats']['files_total'] = $total;
+		$processed = 0;
+
+		// Always make progress, even if the time budget is already used up.
+		while ( $job->state['cursor'] < $total && ( $processed < Downloader::CONCURRENCY * 4 || $job->has_time( 5.0 ) ) ) {
+			$old  = $plan[ $job->state['cursor'] ];
 			$file = $this->maps['files'][ $old ];
+			$job->state['cursor']++;
+			$processed++;
 
 			if ( 'skip' === $file['action'] ) {
 				$job->count( 'files_existing' );
@@ -201,27 +209,110 @@ final class Importer {
 			}
 
 			$target = $basedir . $file['path'];
-			wp_mkdir_p( dirname( $target ) );
 
-			$stream = $zip->getStream( Package::UPLOADS_ENTRY . $old );
-			$out    = $stream ? fopen( $target, 'wb' ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+			if ( 'download' === $file['action'] ) {
+				$queue[] = array(
+					'url'    => Downloader::url( $this->maps['media_source'], $old ),
+					'target' => $target,
+					'size'   => isset( $file['size'] ) ? $file['size'] : null,
+					'old'    => $old,
+				);
 
-			if ( ! $stream || ! $out ) {
-				/* translators: %s: file path */
-				$job->log( sprintf( __( 'Could not extract %s.', 'puppypress-migrator' ), $old ), 'warning' );
+				if ( count( $queue ) >= Downloader::CONCURRENCY * 4 ) {
+					$this->download( $queue, $job );
+					$queue = array();
+				}
 				continue;
 			}
 
-			stream_copy_to_stream( $stream, $out );
-			fclose( $stream ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-			fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-			$job->count( 'files_extracted' );
+			$zip = $zip ? $zip : $this->open_zip( $job );
+			$this->extract( $zip, $old, $target, $job );
 		}
 
-		$zip->close();
-		$job->state['cursor'] += count( $batch );
+		if ( $queue ) {
+			$this->download( $queue, $job );
+		}
 
-		return $job->state['cursor'] >= count( $plan );
+		if ( $zip ) {
+			$zip->close();
+		}
+
+		$job->state['stats']['files_done'] = $job->state['cursor'];
+
+		if ( $job->state['cursor'] < $total ) {
+			return false;
+		}
+
+		$stats = $job->state['stats'];
+
+		if ( ! empty( $stats['files_failed'] ) ) {
+			/* translators: 1: number of files, 2: URL */
+			$job->log( sprintf( __( '%1$d media files could not be transferred. Check that the old site is reachable at %2$s and start the import again; existing files are skipped.', 'puppypress-migrator' ), $stats['files_failed'], $this->maps['media_source'] ), 'warning' );
+		}
+
+		/* translators: 1: downloaded, 2: extracted, 3: already present */
+		$job->log( sprintf( __( 'Media files: %1$d downloaded, %2$d extracted from the package, %3$d already present.', 'puppypress-migrator' ), isset( $stats['files_downloaded'] ) ? $stats['files_downloaded'] : 0, isset( $stats['files_extracted'] ) ? $stats['files_extracted'] : 0, isset( $stats['files_existing'] ) ? $stats['files_existing'] : 0 ) );
+
+		return true;
+	}
+
+	/**
+	 * Extracts one file from the package.
+	 *
+	 * @param ZipArchive $zip    Package.
+	 * @param string     $old    Path in the package.
+	 * @param string     $target Absolute target path.
+	 * @param Job        $job    Job.
+	 */
+	private function extract( ZipArchive $zip, $old, $target, Job $job ) {
+		wp_mkdir_p( dirname( $target ) );
+
+		$stream = $zip->getStream( Package::UPLOADS_ENTRY . $old );
+		$out    = $stream ? fopen( $target, 'wb' ) : false; // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+
+		if ( ! $stream || ! $out ) {
+			$this->file_failed( $job, $old, __( 'not readable in the package', 'puppypress-migrator' ) );
+			return;
+		}
+
+		stream_copy_to_stream( $stream, $out );
+		fclose( $stream ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		fclose( $out ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
+		$job->count( 'files_extracted' );
+	}
+
+	/**
+	 * Downloads a queue of files in parallel.
+	 *
+	 * @param array $queue Items with url, target, size, old.
+	 * @param Job   $job   Job.
+	 */
+	private function download( array $queue, Job $job ) {
+		foreach ( Downloader::fetch( $queue ) as $index => $result ) {
+			if ( true === $result ) {
+				$job->count( 'files_downloaded' );
+			} else {
+				$this->file_failed( $job, $queue[ $index ]['old'], (string) $result );
+			}
+		}
+	}
+
+	/**
+	 * Records a file that could not be transferred.
+	 *
+	 * @param Job    $job    Job.
+	 * @param string $old    Path.
+	 * @param string $reason Reason.
+	 */
+	private function file_failed( Job $job, $old, $reason ) {
+		$job->count( 'files_failed' );
+
+		if ( $job->state['stats']['files_failed'] <= 50 ) {
+			/* translators: 1: file path, 2: reason */
+			$job->log( sprintf( __( 'Media file not transferred (%2$s): %1$s', 'puppypress-migrator' ), $old, $reason ), 'warning' );
+		} elseif ( 51 === $job->state['stats']['files_failed'] ) {
+			$job->log( __( 'Further failed files are only counted.', 'puppypress-migrator' ), 'warning' );
+		}
 	}
 
 	/**
@@ -926,25 +1017,42 @@ final class Importer {
 	}
 
 	/**
-	 * Decides for every media file whether to extract, skip or relocate it.
+	 * Decides for every media file how it gets to this site.
 	 *
-	 * All files of one attachment move together so its metadata stays valid.
+	 * Actions: "skip" (identical file exists), "extract" (from the package) or
+	 * "download" (from the old site). If any file of an attachment collides
+	 * with a different existing file, all files of that attachment move into
+	 * a separate folder together, so its metadata stays valid.
 	 *
 	 * @param ZipArchive $zip Package.
 	 * @param Job        $job Job.
 	 */
 	private function plan_files( ZipArchive $zip, Job $job ) {
-		$basedir  = trailingslashit( wp_upload_dir( null, false )['basedir'] );
-		$prefix   = 'ppm-import-' . gmdate( 'Ymd-His' ) . '/';
-		$rejected = 0;
+		$basedir     = trailingslashit( wp_upload_dir( null, false )['basedir'] );
+		$prefix      = 'ppm-import-' . gmdate( 'Ymd-His' ) . '/';
+		$rejected    = 0;
+		$unavailable = 0;
+		$downloads   = 0;
 
 		foreach ( $this->data['posts'] as $post ) {
 			if ( empty( $post['files'] ) ) {
 				continue;
 			}
 
+			$sizes    = isset( $post['file_sizes'] ) && is_array( $post['file_sizes'] ) ? $post['file_sizes'] : array();
 			$files    = array();
 			$conflict = false;
+
+			// Attachment imported by an earlier run: keep its folder, only fill gaps.
+			$existing_prefix = null;
+			if ( isset( $this->maps['posts'][ (int) $post['ID'] ] ) && ! empty( $post['meta']['_wp_attached_file'][0] ) ) {
+				$main     = ltrim( $post['meta']['_wp_attached_file'][0], '/' );
+				$attached = (string) get_post_meta( $this->maps['posts'][ (int) $post['ID'] ], '_wp_attached_file', true );
+
+				if ( '' !== $attached && substr( $attached, -strlen( $main ) ) === $main ) {
+					$existing_prefix = substr( $attached, 0, -strlen( $main ) );
+				}
+			}
 
 			foreach ( $post['files'] as $old ) {
 				if ( ! Package::is_allowed_upload_path( $old ) ) {
@@ -954,38 +1062,67 @@ final class Importer {
 
 				$stat = $zip->statName( Package::UPLOADS_ENTRY . $old );
 
-				if ( ! $stat ) {
+				if ( $stat ) {
+					$source = 'extract';
+					$size   = (int) $stat['size'];
+				} elseif ( isset( $sizes[ $old ] ) ) {
+					$source = 'download';
+					$size   = (int) $sizes[ $old ];
+				} else {
+					$unavailable++;
 					continue;
 				}
 
-				$target = $basedir . $old;
+				$target = $basedir . ( null !== $existing_prefix ? $existing_prefix : '' ) . $old;
+				$action = $source;
 
 				if ( file_exists( $target ) ) {
-					if ( filesize( $target ) === (int) $stat['size'] ) {
-						$files[ $old ] = 'skip';
-					} else {
+					if ( filesize( $target ) === $size ) {
+						$action = 'skip';
+					} elseif ( null === $existing_prefix ) {
 						$conflict = true;
 					}
-				} else {
-					$files[ $old ] = 'extract';
 				}
 
-				if ( ! isset( $files[ $old ] ) ) {
-					$files[ $old ] = 'extract';
-				}
+				$files[ $old ] = array(
+					'source' => $source,
+					'action' => $action,
+					'size'   => $size,
+				);
 			}
 
-			foreach ( $files as $old => $action ) {
+			foreach ( $files as $old => $file ) {
+				$action = $conflict ? $file['source'] : $file['action'];
+
+				if ( null !== $existing_prefix ) {
+					$path = $existing_prefix . $old;
+				} else {
+					$path = $conflict ? $prefix . $old : $old;
+				}
+
 				$this->maps['files'][ $old ] = array(
-					'path'   => $conflict ? $prefix . $old : $old,
-					'action' => $conflict ? 'extract' : $action,
+					'path'   => $path,
+					'action' => $action,
+					'size'   => $file['size'],
 				);
+
+				$downloads += (int) ( 'download' === $action );
 			}
 		}
 
 		if ( $rejected ) {
 			/* translators: %d: number of files */
 			$job->log( sprintf( __( '%d files in the package have a forbidden name or type and are ignored.', 'puppypress-migrator' ), $rejected ), 'warning' );
+		}
+
+		if ( $unavailable ) {
+			/* translators: %d: number of files */
+			$job->log( sprintf( __( '%d media files are neither in the package nor marked for download and are skipped.', 'puppypress-migrator' ), $unavailable ), 'warning' );
+		}
+
+		if ( $downloads ) {
+			/* translators: 1: number of files, 2: URL */
+			$job->log( sprintf( __( '%1$d media files will be downloaded from %2$s.', 'puppypress-migrator' ), $downloads, $this->maps['media_source'] ) );
 		}
 	}
 

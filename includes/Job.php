@@ -30,6 +30,14 @@ final class Job {
 	public $state;
 
 	/**
+	 * Timestamp (microtime) at which the current request should stop working.
+	 * Set by the runner, not persisted.
+	 *
+	 * @var float
+	 */
+	public $deadline = INF;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $id    Job ID.
@@ -126,6 +134,16 @@ final class Job {
 	 */
 	public function count( $key, $by = 1 ) {
 		$this->state['stats'][ $key ] = ( isset( $this->state['stats'][ $key ] ) ? $this->state['stats'][ $key ] : 0 ) + $by;
+	}
+
+	/**
+	 * Whether the current request still has time for more work.
+	 *
+	 * @param float $reserve Seconds to keep in reserve.
+	 * @return bool
+	 */
+	public function has_time( $reserve = 0.0 ) {
+		return microtime( true ) + $reserve < $this->deadline;
 	}
 
 	/**

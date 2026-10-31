@@ -19,7 +19,7 @@ Der Standard-Export von WordPress (WXR) reicht dafür nicht: Beim Import bekomme
 
 - **Vereinsdaten (immer):** alle 11 Inhaltstypen, alle 19 Taxonomien (auch Begriffe ohne Einträge) mit Hierarchie und Feldern, alle Meta-Felder
 - **Optional:** Beiträge und Seiten (inkl. Seitentemplates), Menüs, Kommentare (ohne Spam und Papierkorb), Widgets
-- **Medien:** die gesamte Mediathek, nur verwendete Medien oder keine. Übertragen werden Originaldateien und alle erzeugten Bildgrößen; Bilder müssen also nicht neu berechnet werden.
+- **Medien:** die gesamte Mediathek, nur verwendete Medien oder keine. Übertragen werden Originaldateien und alle erzeugten Bildgrößen; Bilder müssen also nicht neu berechnet werden. Wie die Dateien ankommen, steht unter [Mediendateien](#mediendateien).
 - **Einstellungen:** Startseite, Beitragsseite, oben gehaltene Beiträge, Menüpositionen
 - **Autoren:** werden über Login oder E-Mail zugeordnet; fehlende Autoren werden optional angelegt.
 
@@ -37,11 +37,46 @@ Große Pakete, die das Upload-Limit überschreiten, per FTP/SFTP nach `wp-conten
 ### Per WP-CLI (empfohlen für große Websites)
 
 ```bash
-wp puppypress-migrator export --dir=/tmp
+wp puppypress-migrator export --dir=/tmp                      # Medien werden beim Import geladen
+wp puppypress-migrator export --dir=/tmp --media-transfer=zip # Medien ins ZIP packen
 wp puppypress-migrator import /tmp/puppypress-export-alte-domain.de-2026-10-31.zip --author=admin
 ```
 
 Weitere Optionen: `wp help puppypress-migrator export` und `wp help puppypress-migrator import`.
+
+## Mediendateien
+
+Für die Medien gibt es zwei Übertragungswege:
+
+| Weg | Wie | Geeignet für |
+| --- | --- | --- |
+| **Beim Import herunterladen** (Standard) | Das Paket enthält nur die Dateiliste mit Größen. Der Import lädt die Dateien parallel von der alten Website herunter und prüft Status und Größe. | Jede Größe, auch Mediatheken mit 100.000 Dateien. Die alte Website muss bis zum Ende des Imports erreichbar sein. |
+| **In die ZIP-Datei packen** | Alles steckt in einem Paket. | Kleine Mediatheken (wenige tausend Dateien) oder eine alte Website, die die neue nicht erreichen kann |
+
+**Noch schneller bei sehr großen Mediatheken:** den Ordner `wp-content/uploads` vorher per rsync oder FTP auf die neue Website kopieren. Der Import erkennt vorhandene Dateien mit passender Größe und lädt nur, was fehlt oder unvollständig ist:
+
+```bash
+rsync -av alter-server:/pfad/zu/wp-content/uploads/ /pfad/zu/neuer/wp-content/uploads/
+```
+
+Ist die alte Website seit dem Export umgezogen, lässt sich beim Import eine andere Medien-Adresse angeben (Feld „Medien herunterladen von“ bzw. `--media-source`). Schlagen Downloads fehl, etwa weil die alte Website kurz nicht erreichbar war, den Import einfach noch einmal starten: Er lädt nur die fehlenden Dateien nach.
+
+### Meldungen beim Export
+
+- **„Datei fehlt auf dem Server“:** Die Mediathek kennt die Datei, auf dem Server liegt sie aber nicht (gelöscht, verschoben, bei einem Auslagerungs-Plugin wie S3 oder mit absolutem Pfad gespeichert).
+- **„Nicht übertragen (Grund)“:** Die Datei existiert, wird aber nicht übertragen:
+  - aus Sicherheitsgründen gesperrte Typen (`.svg`, `.html`, `.js`, `.php`, `.exe` …)
+  - doppelte Endungen wie `bild.php.jpg`
+  - Typen, die WordPress nicht kennt
+  - auffällige Pfade
+
+SVG zwischen zwei vertrauenswürdigen eigenen Websites erlauben (auf beiden Seiten, die neue Website braucht zusätzlich SVG-Unterstützung, z. B. „Safe SVG“):
+
+```php
+add_filter( 'ppm_blocked_extensions', function ( $extensions ) {
+	return array_diff( $extensions, array( 'svg' ) );
+} );
+```
 
 ## Sicherheit und Robustheit
 
@@ -63,7 +98,7 @@ add_filter( 'ppm_post_id_meta_keys', function ( $keys ) {
 } );
 ```
 
-Verfügbare Filter: `ppm_club_post_types`, `ppm_club_taxonomies`, `ppm_post_statuses`, `ppm_post_id_meta_keys`, `ppm_post_id_list_meta_keys`, `ppm_term_id_term_meta_keys`, `ppm_excluded_post_meta_keys`, `ppm_step_seconds`.
+Verfügbare Filter: `ppm_club_post_types`, `ppm_club_taxonomies`, `ppm_post_statuses`, `ppm_post_id_meta_keys`, `ppm_post_id_list_meta_keys`, `ppm_term_id_term_meta_keys`, `ppm_excluded_post_meta_keys`, `ppm_blocked_extensions`, `ppm_download_batch`, `ppm_step_seconds`.
 
 ## Entwicklung
 

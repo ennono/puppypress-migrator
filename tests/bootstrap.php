@@ -211,9 +211,17 @@ class WP_Error {
 }
 
 function __( $t ) { return $t; }
-function apply_filters( $hook, $value ) { return $value; }
+$GLOBALS['fake_filters'] = array();
+function apply_filters( $hook, $value, ...$args ) {
+	if ( isset( $GLOBALS['fake_filters'][ $hook ] ) ) {
+		return call_user_func( $GLOBALS['fake_filters'][ $hook ], $value, ...$args );
+	}
+	return $value;
+}
 function add_action() {}
-function add_filter() {}
+function add_filter( $hook, $callback ) { $GLOBALS['fake_filters'][ $hook ] = $callback; }
+function remove_all_filters( $hook ) { unset( $GLOBALS['fake_filters'][ $hook ] ); }
+function esc_url_raw( $url ) { return filter_var( $url, FILTER_VALIDATE_URL ) ? $url : ''; }
 function is_wp_error( $thing ) { return $thing instanceof WP_Error; }
 function wp_parse_args( $args, $defaults ) { return array_merge( $defaults, (array) $args ); }
 function wp_json_encode( $data, $flags = 0 ) { return json_encode( $data, $flags | JSON_INVALID_UTF8_SUBSTITUTE ); }
@@ -299,6 +307,10 @@ function wp_insert_post( $arr, $wp_error = false ) {
 		array( 'ID' => $id )
 	);
 	return $id;
+}
+function get_post_meta( $id, $key, $single = false ) {
+	$values = fake_meta( $id, $key );
+	return $single ? ( $values ? $values[0] : '' ) : $values;
 }
 function get_post( $id ) { return isset( $GLOBALS['site']['tables']['posts'][ $id ] ) ? (object) $GLOBALS['site']['tables']['posts'][ $id ] : null; }
 function fake_add_meta( $table, $column, $id, $key, $value ) {

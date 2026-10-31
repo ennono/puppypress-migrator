@@ -76,6 +76,14 @@ check( 'allowed path with dots in name', Package::is_allowed_upload_path( '2020/
 foreach ( array( '../wp-config.php', '2020/../../x.jpg', '/etc/passwd.jpg', 'C:/x.jpg', '2020/shell.php', '2020/shell.php.jpg', '2020/.htaccess', 'a\\b.jpg', "a\0.jpg", '2020/readme.txt', '2020/x.phtml', '' ) as $bad ) {
 	check( 'rejected path ' . json_encode( $bad ), ! Package::is_allowed_upload_path( $bad ) );
 }
+check( 'reason: blocked type', false !== strpos( Package::rejection_reason( '2020/logo.svg' ), '.svg' ) );
+check( 'reason: double extension', false !== strpos( Package::rejection_reason( '2020/x.php.jpg' ), 'double' ) );
+check( 'reason: unknown type', false !== strpos( Package::rejection_reason( '2020/readme.txt' ), 'unknown' ) );
+check( 'reason: invalid path', 'invalid path' === Package::rejection_reason( '../x.jpg' ) );
+add_filter( 'ppm_blocked_extensions', function ( $ext ) { return array_diff( $ext, array( 'svg' ) ); } );
+$GLOBALS['fake_mimes_extra'] = true;
+check( 'svg can be allowed by filter (then WordPress decides)', false === strpos( Package::rejection_reason( '2020/logo.svg' ), 'blocked' ) );
+remove_all_filters( 'ppm_blocked_extensions' );
 
 /*
  * 3. Round trip: old site → package → new site.
@@ -185,7 +193,7 @@ $GLOBALS['site']['options']['widget_text']       = array( 4 => array( 'text' => 
 $GLOBALS['site']['theme_mods']['nav_menu_locations'] = array( 'primary-menu' => $menu );
 
 // Export.
-$export = Job::create( 'export', Exporter::default_options() );
+$export = Job::create( 'export', array( 'transfer' => 'zip' ) + Exporter::default_options() );
 Runner::run( $export, 0 );
 check( 'export finished without error', $export->state['done'] && empty( $export->state['error'] ) );
 if ( ! empty( $export->state['error'] ) ) {
@@ -368,6 +376,114 @@ $zip->addFromString( 'data.json', json_encode( array( 'format' => 'something-els
 $zip->close();
 Runner::run( $foreign_zip, 0 );
 check( 'foreign package rejected', ! empty( $foreign_zip->state['error'] ) );
+
+/*
+ * 4. Media transfer by download (large media libraries).
+ */
+fake_site( 'https://old-club.example', $club_taxonomies );
+$old_uploads = $GLOBALS['site']['uploads'];
+mkdir( $old_uploads . '/2021/05', 0777, true );
+$GLOBALS['site']['tables']['posts'] = array();
+for ( $i = 1; $i <= 40; $i++ ) {
+	$name = sprintf( '2021/05/dog %02d.jpg', $i );
+	file_put_contents( $old_uploads . '/' . $name, str_repeat( 'x', 100 + $i ) );
+	$p( 100 + $i, 'attachment', 'dog ' . $i, array( 'post_status' => 'inherit', 'post_mime_type' => 'image/jpeg' ) );
+	$m( 100 + $i, '_wp_attached_file', $name );
+}
+$p( 200, 'attachment', 'ghost', array( 'post_status' => 'inherit', 'post_mime_type' => 'image/jpeg' ) );
+$m( 200, '_wp_attached_file', '2021/05/ghost.jpg' );
+$p( 201, 'attachment', 'logo', array( 'post_status' => 'inherit', 'post_mime_type' => 'image/svg+xml' ) );
+$m( 201, '_wp_attached_file', '2021/05/logo.svg' );
+file_put_contents( $old_uploads . '/2021/05/logo.svg', '<svg/>' );
+
+$export = Job::create( 'export', Exporter::default_options() );
+Runner::run( $export, 0 );
+check( 'download export finished', $export->state['done'] && empty( $export->state['error'] ) );
+$zip = new ZipArchive();
+$zip->open( $export->path( Exporter::ZIP_NAME ) );
+check( 'download export packs no media', 1 === $zip->numFiles );
+$data = json_decode( $zip->getFromName( 'data.json' ), true );
+$zip->close();
+$sizes = array();
+foreach ( $data['posts'] as $post ) {
+	if ( ! empty( $post['file_sizes'] ) ) { $sizes += $post['file_sizes']; }
+}
+check( 'file sizes exported', 40 === count( $sizes ) && 101 === $sizes['2021/05/dog 01.jpg'] );
+$log = implode( "\n", wp_list_pluck( $export->state['log'], 'message' ) );
+check( 'missing file reported as missing', false !== strpos( $log, 'File is missing on the server: 2021/05/ghost.jpg' ) );
+check( 'svg reported with reason', false !== strpos( $log, 'Not transferred (file type .svg is blocked for security reasons): 2021/05/logo.svg' ) );
+check( 'counts reported', 1 === $export->state['stats']['files_missing'] && 1 === $export->state['stats']['files_rejected'] );
+
+$package = $export->path( Exporter::ZIP_NAME );
+
+fake_site( 'https://new-club.example', $club_taxonomies );
+$new_uploads = $GLOBALS['site']['uploads'];
+// Pretend two files were copied via FTP beforehand, one of them incompletely.
+mkdir( $new_uploads . '/2021/05', 0777, true );
+copy( $old_uploads . '/2021/05/dog 01.jpg', $new_uploads . '/2021/05/dog 01.jpg' );
+file_put_contents( $new_uploads . '/2021/05/dog 02.jpg', 'broken' );
+
+$requested = array();
+add_filter(
+	'ppm_download_batch',
+	function ( $result, $items ) use ( $old_uploads, &$requested ) {
+		$results = array();
+		foreach ( $items as $index => $item ) {
+			$requested[] = $item['url'];
+			$relative    = rawurldecode( substr( $item['url'], strlen( 'https://media.example/uploads/' ) ) );
+			if ( false !== strpos( $relative, 'dog 03' ) ) {
+				$results[ $index ] = 'HTTP 404';
+				continue;
+			}
+			wp_mkdir_p( dirname( $item['target'] ) );
+			copy( $old_uploads . '/' . $relative, $item['target'] );
+			$results[ $index ] = filesize( $item['target'] ) === $item['size'] ? true : 'size';
+		}
+		return $results;
+	}
+);
+
+$import = Job::create( 'import', array( 'media_source' => 'https://media.example/uploads' ) + Importer::default_options() );
+copy( $package, $import->path( Importer::ZIP_NAME ) );
+$requests = 0;
+while ( ! $import->state['done'] && $requests < 500 ) {
+	$import = Job::load( $import->id );
+	Runner::run( $import, 0.000001 );
+	$requests++;
+}
+remove_all_filters( 'ppm_download_batch' );
+
+check( 'download import finished', $import->state['done'] && empty( $import->state['error'] ) );
+check( 'urls use media source and encode spaces', in_array( 'https://media.example/uploads/2021/05/dog%2005.jpg', $requested, true ) );
+check( 'pre-copied identical file not downloaded', ! in_array( 'https://media.example/uploads/2021/05/dog%2001.jpg', $requested, true ) );
+check( 'files downloaded', 38 === $import->state['stats']['files_downloaded'] );
+check( 'failed download counted', 1 === $import->state['stats']['files_failed'] );
+check( 'existing identical file counted', 1 === $import->state['stats']['files_existing'] );
+check( 'downloaded file in place', is_file( $new_uploads . '/2021/05/dog 40.jpg' ) && 140 === filesize( $new_uploads . '/2021/05/dog 40.jpg' ) );
+check( 'incomplete pre-copied file not overwritten', 'broken' === file_get_contents( $new_uploads . '/2021/05/dog 02.jpg' ) );
+$dog2 = fake_post_by_title( 'dog 2', 'attachment' );
+$dog2_file = fake_meta( $dog2['ID'], '_wp_attached_file' );
+check( 'conflicting file downloaded into separate folder', 0 === strpos( $dog2_file[0], 'ppm-import-' ) && 102 === filesize( $new_uploads . '/' . $dog2_file[0] ) );
+$import_log = implode( "\n", wp_list_pluck( $import->state['log'], 'message' ) );
+check( 'failed file logged with reason', false !== strpos( $import_log, 'Media file not transferred (HTTP 404): 2021/05/dog 03.jpg' ) );
+
+// Running the import again only fetches what is still missing.
+$requested = array();
+add_filter( 'ppm_download_batch', function ( $result, $items ) use ( $old_uploads, &$requested ) {
+	$results = array();
+	foreach ( $items as $index => $item ) {
+		$requested[] = $item['url'];
+		$results[ $index ] = true;
+	}
+	return $results;
+} );
+$again = Job::create( 'import', array( 'media_source' => 'https://media.example/uploads' ) + Importer::default_options() );
+copy( $package, $again->path( Importer::ZIP_NAME ) );
+Runner::run( $again, 0 );
+remove_all_filters( 'ppm_download_batch' );
+check( 'second run downloads only the missing file', array( 'https://media.example/uploads/2021/05/dog%2003.jpg' ) === $requested );
+
+check( 'downloader url helper', 'https://a.example/up/2021/05/%C3%BCber%20uns.jpg' === PuppyPressMigrator\Downloader::url( 'https://a.example/up/', '2021/05/über uns.jpg' ) );
 
 fwrite( STDOUT, sprintf( "%d checks, %d failures\n", $checks, $failures ) );
 exit( $failures ? 1 : 0 );
